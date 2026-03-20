@@ -1,0 +1,113 @@
+version: '3.8'
+
+services:
+  # MongoDB for main database
+  mongodb:
+    image: mongo:6.0
+    container_name: attendance-mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: securepassword
+      MONGO_INITDB_DATABASE: attendance
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+
+  # PostgreSQL for relational data
+  postgres:
+    image: postgres:15
+    container_name: attendance-postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: securepassword
+      POSTGRES_DB: attendance
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Redis for caching and real-time data
+  redis:
+    image: redis:7-alpine
+    container_name: attendance-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # Backend API
+  backend:
+    build: ./backend
+    container_name: attendance-backend
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongodb
+      - postgres
+      - redis
+    environment:
+      NODE_ENV: production
+      MONGODB_URI: mongodb://admin:securepassword@mongodb:27017/attendance?authSource=admin
+      POSTGRES_URI: postgresql://admin:securepassword@postgres:5432/attendance
+      REDIS_URI: redis://redis:6379
+      JWT_SECRET: your-super-secret-jwt-key
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./backend/payslips:/app/payslips
+
+  # AI Model Server
+  ai-server:
+    build: ./ai-models
+    container_name: attendance-ai
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      MODEL_PATH: /models
+    volumes:
+      - ./ai-models:/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # Admin Web App
+  admin-web:
+    build: ./admin-web
+    container_name: attendance-admin
+    restart: always
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    environment:
+      API_URL: http://backend:3000
+
+  # Nginx for load balancing
+  nginx:
+    image: nginx:alpine
+    container_name: attendance-nginx
+    restart: always
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - backend
+      - admin-web
+
+volumes:
+  mongodb_data:
+  postgres_data:
+  redis_data:
