@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Typography, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Paper, Button, Grid, Card, CardContent,
   Select, MenuItem, FormControl, InputLabel, Chip, Dialog,
-  DialogTitle, DialogContent, DialogActions, Box
+  DialogTitle, DialogContent, DialogActions, Box, CircularProgress, Alert
 } from '@mui/material';
 import { api } from '../services/api';
 
@@ -14,6 +14,20 @@ const SalaryManagement = () => {
   const [payslipOpen, setPayslipOpen] = useState(false);
   const [selectedPayslip, setSelectedPayslip] = useState(null);
   const [processing, setProcessing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Dynamic year range: 5 years back from current year to 1 year ahead
+  const years = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const startYear = currentYear - 5;
+    const endYear = currentYear + 1;
+    const result = [];
+    for (let y = startYear; y <= endYear; y++) {
+      result.push(y);
+    }
+    return result;
+  }, []);
 
   useEffect(() => {
     loadSalaries();
@@ -21,10 +35,14 @@ const SalaryManagement = () => {
 
   const loadSalaries = async () => {
     try {
+      setError(null);
+      setLoading(true);
       const data = await api.getSalaries(selectedMonth, selectedYear);
       setSalaries(data.salaries || data || []);
-    } catch (error) {
-      console.error('Failed to load salaries:', error);
+    } catch (err) {
+      setError('Failed to load salary data. Please try again later.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -34,8 +52,8 @@ const SalaryManagement = () => {
     try {
       await api.processAllSalaries(selectedMonth, selectedYear);
       loadSalaries();
-    } catch (error) {
-      console.error('Failed to process salaries:', error);
+    } catch (err) {
+      setError('Failed to process salaries. Please try again later.');
     } finally {
       setProcessing(false);
     }
@@ -46,8 +64,8 @@ const SalaryManagement = () => {
       const payslip = await api.getPayslip(salaryId);
       setSelectedPayslip(payslip);
       setPayslipOpen(true);
-    } catch (error) {
-      console.error('Failed to load payslip:', error);
+    } catch (err) {
+      setError('Failed to load payslip. Please try again later.');
     }
   };
 
@@ -57,7 +75,7 @@ const SalaryManagement = () => {
   ];
 
   return (
-    <div>
+    <div aria-label="Salary management page">
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">Salary Management</Typography>
         <Button
@@ -65,13 +83,18 @@ const SalaryManagement = () => {
           color="primary"
           onClick={handleProcessAll}
           disabled={processing}
+          aria-label="Process all salaries"
         >
           {processing ? 'Processing...' : 'Process All Salaries'}
         </Button>
       </Box>
 
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)} aria-label="Salary error message">{error}</Alert>
+      )}
+
       {/* Month/Year Selector */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
+      <Grid container spacing={2} sx={{ mb: 3 }} aria-label="Salary period selector">
         <Grid item xs={6} sm={3}>
           <FormControl fullWidth>
             <InputLabel>Month</InputLabel>
@@ -79,6 +102,7 @@ const SalaryManagement = () => {
               value={selectedMonth}
               label="Month"
               onChange={(e) => setSelectedMonth(e.target.value)}
+              aria-label="Select month"
             >
               {months.map((m, i) => (
                 <MenuItem key={i} value={i + 1}>{m}</MenuItem>
@@ -93,8 +117,9 @@ const SalaryManagement = () => {
               value={selectedYear}
               label="Year"
               onChange={(e) => setSelectedYear(e.target.value)}
+              aria-label="Select year"
             >
-              {[2024, 2025, 2026].map(y => (
+              {years.map(y => (
                 <MenuItem key={y} value={y}>{y}</MenuItem>
               ))}
             </Select>
@@ -102,69 +127,75 @@ const SalaryManagement = () => {
         </Grid>
       </Grid>
 
-      {/* Salary Table */}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Employee</TableCell>
-              <TableCell>Base Salary</TableCell>
-              <TableCell>Days Present</TableCell>
-              <TableCell>Bonuses</TableCell>
-              <TableCell>Overtime</TableCell>
-              <TableCell>Fines</TableCell>
-              <TableCell>Loan Deductions</TableCell>
-              <TableCell>Net Salary</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {salaries.map((salary) => (
-              <TableRow key={salary._id}>
-                <TableCell>
-                  {salary.userId?.firstName} {salary.userId?.lastName}
-                </TableCell>
-                <TableCell>${salary.baseSalary?.toLocaleString()}</TableCell>
-                <TableCell>{salary.daysPresent}/{salary.workingDaysInMonth}</TableCell>
-                <TableCell sx={{ color: 'green' }}>
-                  +${salary.bonuses?.reduce((s, b) => s + b.amount, 0)?.toLocaleString() || 0}
-                </TableCell>
-                <TableCell sx={{ color: 'green' }}>
-                  +${salary.overtimeEarnings?.toLocaleString() || 0}
-                </TableCell>
-                <TableCell sx={{ color: 'red' }}>
-                  -${salary.fines?.reduce((s, f) => s + f.amount, 0)?.toLocaleString() || 0}
-                </TableCell>
-                <TableCell sx={{ color: 'red' }}>
-                  -${salary.loanDeductions?.reduce((s, l) => s + l.amount, 0)?.toLocaleString() || 0}
-                </TableCell>
-                <TableCell>
-                  <strong>${salary.netSalary?.toLocaleString()}</strong>
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    label={salary.paymentStatus}
-                    color={
-                      salary.paymentStatus === 'paid' ? 'success' :
-                      salary.paymentStatus === 'processed' ? 'info' : 'default'
-                    }
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell>
-                  <Button size="small" onClick={() => handleViewPayslip(salary._id)}>
-                    Payslip
-                  </Button>
-                </TableCell>
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 300 }} aria-label="Loading salary data">
+          <CircularProgress aria-label="Loading spinner" />
+        </Box>
+      ) : (
+        /* Salary Table */
+        <TableContainer component={Paper} aria-label="Salary records table">
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Employee</TableCell>
+                <TableCell>Base Salary</TableCell>
+                <TableCell>Days Present</TableCell>
+                <TableCell>Bonuses</TableCell>
+                <TableCell>Overtime</TableCell>
+                <TableCell>Fines</TableCell>
+                <TableCell>Loan Deductions</TableCell>
+                <TableCell>Net Salary</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Actions</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {salaries.map((salary) => (
+                <TableRow key={salary._id}>
+                  <TableCell>
+                    {salary.userId?.firstName} {salary.userId?.lastName}
+                  </TableCell>
+                  <TableCell>${salary.baseSalary?.toLocaleString()}</TableCell>
+                  <TableCell>{salary.daysPresent}/{salary.workingDaysInMonth}</TableCell>
+                  <TableCell sx={{ color: 'green' }}>
+                    +${salary.bonuses?.reduce((s, b) => s + b.amount, 0)?.toLocaleString() || 0}
+                  </TableCell>
+                  <TableCell sx={{ color: 'green' }}>
+                    +${salary.overtimeEarnings?.toLocaleString() || 0}
+                  </TableCell>
+                  <TableCell sx={{ color: 'red' }}>
+                    -${salary.fines?.reduce((s, f) => s + f.amount, 0)?.toLocaleString() || 0}
+                  </TableCell>
+                  <TableCell sx={{ color: 'red' }}>
+                    -${salary.loanDeductions?.reduce((s, l) => s + l.amount, 0)?.toLocaleString() || 0}
+                  </TableCell>
+                  <TableCell>
+                    <strong>${salary.netSalary?.toLocaleString()}</strong>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={salary.paymentStatus}
+                      color={
+                        salary.paymentStatus === 'paid' ? 'success' :
+                        salary.paymentStatus === 'processed' ? 'info' : 'default'
+                      }
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Button size="small" onClick={() => handleViewPayslip(salary._id)} aria-label={`View payslip for ${salary.userId?.firstName} ${salary.userId?.lastName}`}>
+                      Payslip
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
       {/* Payslip Dialog */}
-      <Dialog open={payslipOpen} onClose={() => setPayslipOpen(false)} maxWidth="md" fullWidth>
+      <Dialog open={payslipOpen} onClose={() => setPayslipOpen(false)} maxWidth="md" fullWidth aria-label="Payslip details dialog">
         <DialogTitle>Payslip - {selectedPayslip?.employee?.name}</DialogTitle>
         <DialogContent>
           {selectedPayslip && (
@@ -219,7 +250,7 @@ const SalaryManagement = () => {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setPayslipOpen(false)}>Close</Button>
+          <Button onClick={() => setPayslipOpen(false)} aria-label="Close payslip dialog">Close</Button>
         </DialogActions>
       </Dialog>
     </div>

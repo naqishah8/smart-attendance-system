@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, FlatList
+  TouchableOpacity, FlatList, ActivityIndicator, Alert
 } from 'react-native';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,6 +12,8 @@ const SalaryScreen = () => {
   const [salaryHistory, setSalaryHistory] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     loadSalaryData();
@@ -19,15 +21,21 @@ const SalaryScreen = () => {
 
   const loadSalaryData = async () => {
     try {
+      setLoading(true);
+      setError(null);
+
       // Get current month salary
       const current = await api.getMonthlySalary(user._id, selectedMonth, selectedYear);
       setCurrentSalary(current);
 
       // Get history
       const history = await api.getSalaryHistory(user._id);
-      setSalaryHistory(history);
-    } catch (error) {
-      console.error('Failed to load salary data:', error);
+      setSalaryHistory(Array.isArray(history) ? history : []);
+    } catch (err) {
+      setError('Failed to load salary data.');
+      Alert.alert('Error', 'Unable to load salary data. Please try again later.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -49,34 +57,74 @@ const SalaryScreen = () => {
     }
   };
 
+  const safeNum = (val) => {
+    const num = Number(val);
+    return isNaN(num) ? 0 : num;
+  };
+
   const renderSalaryCard = () => {
-    if (!currentSalary) return null;
+    if (loading) {
+      return (
+        <View style={styles.card} accessibilityLabel="Loading salary data">
+          <ActivityIndicator size="large" color="#2196F3" />
+        </View>
+      );
+    }
+
+    if (error) {
+      return (
+        <View style={styles.card} accessibilityLabel="Salary load error">
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={loadSalaryData} accessibilityLabel="Retry loading salary" accessibilityRole="button">
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    if (!currentSalary) {
+      return (
+        <View style={styles.card} accessibilityLabel="No salary data">
+          <Text style={styles.cardTitle}>
+            Salary for {getMonthName(selectedMonth)} {selectedYear}
+          </Text>
+          <Text style={styles.noData}>No salary data available for this period.</Text>
+        </View>
+      );
+    }
+
+    const baseSalary = safeNum(currentSalary.baseSalary);
+    const overtimeEarnings = safeNum(currentSalary.overtimeEarnings);
+    const totalEarnings = safeNum(currentSalary.totalEarnings);
+    const totalDeductions = safeNum(currentSalary.totalDeductions);
+    const netSalary = safeNum(currentSalary.netSalary);
+    const bonuses = Math.max(0, totalEarnings - baseSalary - overtimeEarnings);
 
     return (
-      <View style={styles.card}>
+      <View style={styles.card} accessibilityLabel={`Salary details for ${getMonthName(selectedMonth)} ${selectedYear}`}>
         <Text style={styles.cardTitle}>
           Salary for {getMonthName(selectedMonth)} {selectedYear}
         </Text>
 
         <View style={styles.salaryRow}>
           <Text style={styles.label}>Base Salary:</Text>
-          <Text style={styles.value}>${currentSalary.baseSalary}</Text>
+          <Text style={styles.value}>${baseSalary}</Text>
         </View>
 
         <View style={styles.salaryRow}>
           <Text style={styles.label}>Present Days:</Text>
-          <Text style={styles.value}>{currentSalary.proratedDays?.toFixed(1)}</Text>
+          <Text style={styles.value}>{safeNum(currentSalary.proratedDays).toFixed(1)}</Text>
         </View>
 
         <View style={styles.salaryRow}>
           <Text style={styles.label}>Overtime:</Text>
-          <Text style={styles.value}>${currentSalary.overtimeEarnings}</Text>
+          <Text style={styles.value}>${overtimeEarnings}</Text>
         </View>
 
         <View style={styles.salaryRow}>
           <Text style={styles.label}>Bonuses:</Text>
           <Text style={[styles.value, { color: 'green' }]}>
-            +${(currentSalary.totalEarnings - currentSalary.baseSalary - currentSalary.overtimeEarnings).toFixed(2)}
+            +${bonuses.toFixed(2)}
           </Text>
         </View>
 
@@ -85,7 +133,7 @@ const SalaryScreen = () => {
         <View style={styles.salaryRow}>
           <Text style={styles.label}>Fines:</Text>
           <Text style={[styles.value, { color: 'red' }]}>
-            -${currentSalary.totalDeductions}
+            -${totalDeductions}
           </Text>
         </View>
 
@@ -94,7 +142,7 @@ const SalaryScreen = () => {
         <View style={styles.salaryRow}>
           <Text style={[styles.label, { fontWeight: 'bold' }]}>NET SALARY:</Text>
           <Text style={[styles.value, { fontWeight: 'bold', fontSize: 20 }]}>
-            ${currentSalary.netSalary}
+            ${netSalary}
           </Text>
         </View>
 
@@ -106,12 +154,12 @@ const SalaryScreen = () => {
             currentSalary.paymentStatus === 'processed' ? styles.processed :
             styles.pending
           ]}>
-            {currentSalary.paymentStatus?.toUpperCase()}
+            {currentSalary.paymentStatus?.toUpperCase() || 'N/A'}
           </Text>
         </View>
 
         {currentSalary.payslipUrl && (
-          <TouchableOpacity style={styles.payslipButton}>
+          <TouchableOpacity style={styles.payslipButton} accessibilityLabel="Download payslip" accessibilityRole="button">
             <Text style={styles.payslipButtonText}>Download Payslip</Text>
           </TouchableOpacity>
         )}
@@ -120,31 +168,31 @@ const SalaryScreen = () => {
   };
 
   const renderFineItem = ({ item }) => (
-    <View style={styles.fineItem}>
+    <View style={styles.fineItem} accessibilityLabel={`Fine: ${item?.type?.category || 'Unknown'}, amount $${safeNum(item?.amount)}`}>
       <View style={styles.fineHeader}>
-        <Text style={styles.fineType}>{item.type?.category}</Text>
-        <Text style={styles.fineAmount}>-${item.amount}</Text>
+        <Text style={styles.fineType}>{item?.type?.category || 'Unknown'}</Text>
+        <Text style={styles.fineAmount}>-${safeNum(item?.amount)}</Text>
       </View>
       <Text style={styles.fineDate}>
-        {new Date(item.createdAt).toLocaleDateString()}
+        {item?.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A'}
       </Text>
-      {item.evidence?.description && (
+      {item?.evidence?.description && (
         <Text style={styles.fineReason}>{item.evidence.description}</Text>
       )}
     </View>
   );
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} accessibilityLabel="Salary screen">
       {/* Month/Year Selector */}
-      <View style={styles.selector}>
-        <TouchableOpacity onPress={prevMonth}>
+      <View style={styles.selector} accessibilityLabel="Month and year selector">
+        <TouchableOpacity onPress={prevMonth} accessibilityLabel="Previous month" accessibilityRole="button">
           <Text style={styles.arrow}>{'<'}</Text>
         </TouchableOpacity>
         <Text style={styles.monthYear}>
           {getMonthName(selectedMonth)} {selectedYear}
         </Text>
-        <TouchableOpacity onPress={nextMonth}>
+        <TouchableOpacity onPress={nextMonth} accessibilityLabel="Next month" accessibilityRole="button">
           <Text style={styles.arrow}>{'>'}</Text>
         </TouchableOpacity>
       </View>
@@ -153,48 +201,54 @@ const SalaryScreen = () => {
       {renderSalaryCard()}
 
       {/* Fines Breakdown */}
-      {currentSalary?.fines?.length > 0 && (
-        <View style={styles.card}>
+      {!loading && currentSalary?.fines?.length > 0 && (
+        <View style={styles.card} accessibilityLabel="Fines breakdown">
           <Text style={styles.cardTitle}>Fines Breakdown</Text>
           <FlatList
             data={currentSalary.fines}
             renderItem={renderFineItem}
-            keyExtractor={(item, index) => index.toString()}
+            keyExtractor={(item, index) => item?._id || index.toString()}
             scrollEnabled={false}
           />
         </View>
       )}
 
       {/* Loan Deductions */}
-      {currentSalary?.loanDeductions?.length > 0 && (
-        <View style={styles.card}>
+      {!loading && currentSalary?.loanDeductions?.length > 0 && (
+        <View style={styles.card} accessibilityLabel="Loan deductions">
           <Text style={styles.cardTitle}>Loan Deductions</Text>
           {currentSalary.loanDeductions.map((loan, index) => (
-            <View key={index} style={styles.loanItem}>
+            <View key={loan?._id || index} style={styles.loanItem}>
               <Text>Loan Installment</Text>
-              <Text style={styles.loanAmount}>-${loan.amount}</Text>
+              <Text style={styles.loanAmount}>-${safeNum(loan?.amount)}</Text>
             </View>
           ))}
         </View>
       )}
 
       {/* Salary History */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Salary History</Text>
-        {salaryHistory.map((salary, index) => (
-          <TouchableOpacity
-            key={index}
-            style={styles.historyItem}
-            onPress={() => {
-              setSelectedMonth(salary.month);
-              setSelectedYear(salary.year);
-            }}
-          >
-            <Text>{getMonthName(salary.month)} {salary.year}</Text>
-            <Text style={styles.historyAmount}>${salary.netSalary}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      {!loading && salaryHistory.length > 0 && (
+        <View style={styles.card} accessibilityLabel="Salary history">
+          <Text style={styles.cardTitle}>Salary History</Text>
+          {salaryHistory.map((salary, index) => (
+            <TouchableOpacity
+              key={salary?._id || index}
+              style={styles.historyItem}
+              onPress={() => {
+                if (salary?.month && salary?.year) {
+                  setSelectedMonth(salary.month);
+                  setSelectedYear(salary.year);
+                }
+              }}
+              accessibilityLabel={`${getMonthName(salary?.month)} ${salary?.year}: $${safeNum(salary?.netSalary)}`}
+              accessibilityRole="button"
+            >
+              <Text>{getMonthName(salary?.month)} {salary?.year}</Text>
+              <Text style={styles.historyAmount}>${safeNum(salary?.netSalary)}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
     </ScrollView>
   );
 };
@@ -202,7 +256,7 @@ const SalaryScreen = () => {
 const getMonthName = (month) => {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return months[month - 1];
+  return months[(month || 1) - 1] || 'N/A';
 };
 
 const styles = StyleSheet.create({
@@ -282,6 +336,26 @@ const styles = StyleSheet.create({
     marginTop: 15
   },
   payslipButtonText: {
+    color: 'white',
+    fontWeight: 'bold'
+  },
+  errorText: {
+    color: 'red',
+    textAlign: 'center',
+    marginBottom: 10
+  },
+  noData: {
+    color: '#999',
+    textAlign: 'center',
+    paddingVertical: 20
+  },
+  retryButton: {
+    backgroundColor: '#2196F3',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center'
+  },
+  retryButtonText: {
     color: 'white',
     fontWeight: 'bold'
   },

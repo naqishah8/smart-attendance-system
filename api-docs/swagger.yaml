@@ -1,0 +1,1080 @@
+openapi: 3.0.3
+info:
+  title: CCTV Smart Attendance System API
+  description: AI-powered attendance management with facial recognition, PPE detection, salary/fine management, and HR analytics.
+  version: 1.0.0
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:3000/api
+    description: Development
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token from /auth/login
+
+  parameters:
+    pageParam:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    limitParam:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+    startDateParam:
+      name: startDate
+      in: query
+      schema: { type: string, format: date }
+    endDateParam:
+      name: endDate
+      in: query
+      schema: { type: string, format: date }
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        success: { type: boolean, example: false }
+        message: { type: string }
+        code: { type: string }
+
+    PaginatedResponse:
+      type: object
+      properties:
+        total: { type: integer }
+        page: { type: integer }
+        limit: { type: integer }
+
+    User:
+      type: object
+      properties:
+        _id: { type: string }
+        employeeId: { type: string, example: EMP001 }
+        firstName: { type: string, example: John }
+        lastName: { type: string, example: Doe }
+        email: { type: string, format: email }
+        phone: { type: string }
+        department: { type: string }
+        designation: { type: string }
+        baseSalary: { type: number, minimum: 0 }
+        isActive: { type: boolean }
+        role: { type: string, enum: [employee, admin, super-admin] }
+        createdAt: { type: string, format: date-time }
+
+    Attendance:
+      type: object
+      properties:
+        _id: { type: string }
+        userId: { type: string }
+        date: { type: string, format: date }
+        status: { type: string, enum: [present, absent, late, half-day, early-departure, holiday, leave] }
+        firstDetection: { type: string, format: date-time }
+        lastDetection: { type: string, format: date-time }
+        totalWorkHours: { type: number }
+        breakHours: { type: number }
+        effectiveWorkHours: { type: number }
+        shiftCompliance:
+          type: object
+          properties:
+            wasLate: { type: boolean }
+            lateMinutes: { type: number }
+            wasEarlyDeparture: { type: boolean }
+            earlyDepartureMinutes: { type: number }
+            overtimeHours: { type: number }
+        detections:
+          type: array
+          items:
+            type: object
+            properties:
+              timestamp: { type: string, format: date-time }
+              cameraId: { type: string }
+              confidence: { type: number }
+              livenessScore: { type: number, minimum: 0, maximum: 1 }
+              emotion: { type: string, enum: [neutral, happy, stressed, fatigued, angry] }
+              ppeCompliance:
+                type: object
+                properties:
+                  helmet: { type: boolean }
+                  vest: { type: boolean }
+                  goggles: { type: boolean }
+                  gloves: { type: boolean }
+
+    Fine:
+      type: object
+      properties:
+        _id: { type: string }
+        userId: { type: string }
+        type:
+          type: object
+          properties:
+            category: { type: string, enum: [late, absent, early-departure, safety-violation, ppe-violation, other] }
+            ruleId: { type: string }
+        amount: { type: number }
+        currency: { type: string, default: USD }
+        status: { type: string, enum: [pending, applied, disputed, waived] }
+        evidence:
+          type: object
+          properties:
+            description: { type: string }
+            snapshotUrl: { type: string }
+            timestamp: { type: string, format: date-time }
+        dispute:
+          type: object
+          properties:
+            reason: { type: string }
+            filedAt: { type: string, format: date-time }
+            resolvedAt: { type: string, format: date-time }
+            resolution: { type: string }
+
+    Salary:
+      type: object
+      properties:
+        _id: { type: string }
+        userId: { type: string }
+        month: { type: integer, minimum: 1, maximum: 12 }
+        year: { type: integer }
+        baseSalary: { type: number }
+        daysPresent: { type: number }
+        daysAbsent: { type: number }
+        workingDaysInMonth: { type: number }
+        overtimeEarnings: { type: number }
+        totalEarnings: { type: number }
+        totalDeductions: { type: number }
+        netSalary: { type: number }
+        paymentStatus: { type: string, enum: [pending, processed, paid] }
+
+    Loan:
+      type: object
+      properties:
+        _id: { type: string }
+        userId: { type: string }
+        amount: { type: number }
+        purpose: { type: string }
+        totalInstallments: { type: integer }
+        installmentAmount: { type: number }
+        installmentsPaid: { type: integer }
+        status: { type: string, enum: [active, completed, defaulted] }
+
+    Camera:
+      type: object
+      properties:
+        _id: { type: string }
+        name: { type: string }
+        rtspUrl: { type: string }
+        status: { type: string, enum: [online, offline, maintenance] }
+        location:
+          type: object
+          properties:
+            zone: { type: string }
+            floor: { type: number }
+
+    Shift:
+      type: object
+      properties:
+        _id: { type: string }
+        name: { type: string }
+        startTime: { type: string, example: "09:00" }
+        endTime: { type: string, example: "17:00" }
+        gracePeriod: { type: integer }
+        workingDays: { type: array, items: { type: integer, minimum: 0, maximum: 6 } }
+
+  responses:
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    BadRequest:
+      description: Invalid input
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ─── Auth ──────────────────────────────────────────────────────
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login and receive JWT tokens
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8 }
+      responses:
+        200:
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: { type: string }
+                  refreshToken: { type: string }
+                  expiresIn: { type: string, example: "24h" }
+                  user: { $ref: '#/components/schemas/User' }
+        400: { $ref: '#/components/responses/BadRequest' }
+        401: { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [employeeId, firstName, lastName, email, password, department]
+              properties:
+                employeeId: { type: string }
+                firstName: { type: string }
+                lastName: { type: string }
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8 }
+                department: { type: string }
+                role: { type: string, enum: [employee, admin, super-admin], default: employee }
+      responses:
+        201:
+          description: User created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user: { $ref: '#/components/schemas/User' }
+        409: { description: Duplicate email or employee ID }
+
+  /auth/refresh-token:
+    post:
+      tags: [Auth]
+      summary: Refresh an expired access token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken: { type: string }
+      responses:
+        200:
+          description: New token issued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: { type: string }
+                  expiresIn: { type: string }
+        401: { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/profile:
+    get:
+      tags: [Auth]
+      summary: Get current user profile
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user: { $ref: '#/components/schemas/User' }
+    put:
+      tags: [Auth]
+      summary: Update current user profile (firstName, lastName, phone only)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName: { type: string }
+                lastName: { type: string }
+                phone: { type: string }
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user: { $ref: '#/components/schemas/User' }
+
+  # ─── Employees ─────────────────────────────────────────────────
+  /employees:
+    get:
+      tags: [Employees]
+      summary: List employees (with search, filter, pagination)
+      parameters:
+        - { $ref: '#/components/parameters/pageParam' }
+        - { $ref: '#/components/parameters/limitParam' }
+        - { name: department, in: query, schema: { type: string } }
+        - { name: isActive, in: query, schema: { type: boolean } }
+        - { name: search, in: query, schema: { type: string }, description: Search by name or ID }
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/PaginatedResponse' }
+                  - type: object
+                    properties:
+                      employees: { type: array, items: { $ref: '#/components/schemas/User' } }
+    post:
+      tags: [Employees]
+      summary: Create employee (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [employeeId, firstName, lastName, email, department]
+              properties:
+                employeeId: { type: string }
+                firstName: { type: string }
+                lastName: { type: string }
+                email: { type: string, format: email }
+                department: { type: string }
+                baseSalary: { type: number, minimum: 0 }
+                role: { type: string, enum: [employee, admin, super-admin] }
+      responses:
+        201:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  employee: { $ref: '#/components/schemas/User' }
+
+  /employees/{id}:
+    get:
+      tags: [Employees]
+      summary: Get employee by ID
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  employee: { $ref: '#/components/schemas/User' }
+        404: { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Employees]
+      summary: Update employee (admin only)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  employee: { $ref: '#/components/schemas/User' }
+    delete:
+      tags: [Employees]
+      summary: Deactivate employee (admin only)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        200:
+          description: Employee deactivated
+
+  /employees/{id}/register-face:
+    post:
+      tags: [Employees]
+      summary: Register face for recognition (admin only)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [imageBuffer]
+              properties:
+                imageBuffer: { type: string, description: Base64-encoded image (max 5MB) }
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  confidence: { type: number }
+
+  # ─── Attendance ────────────────────────────────────────────────
+  /attendance:
+    get:
+      tags: [Attendance]
+      summary: List attendance records (with filters)
+      parameters:
+        - { $ref: '#/components/parameters/pageParam' }
+        - { $ref: '#/components/parameters/limitParam' }
+        - { $ref: '#/components/parameters/startDateParam' }
+        - { $ref: '#/components/parameters/endDateParam' }
+        - { name: status, in: query, schema: { type: string, enum: [present, absent, late, half-day] } }
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/PaginatedResponse' }
+                  - type: object
+                    properties:
+                      records: { type: array, items: { $ref: '#/components/schemas/Attendance' } }
+
+  /attendance/today/{userId}:
+    get:
+      tags: [Attendance]
+      summary: Get today's attendance for a user
+      parameters:
+        - { name: userId, in: path, required: true, schema: { type: string } }
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  attendance: { $ref: '#/components/schemas/Attendance' }
+
+  /attendance/report/{userId}:
+    get:
+      tags: [Attendance]
+      summary: Get attendance report for a user
+      parameters:
+        - { name: userId, in: path, required: true, schema: { type: string } }
+        - { $ref: '#/components/parameters/startDateParam' }
+        - { $ref: '#/components/parameters/endDateParam' }
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  attendances: { type: array, items: { $ref: '#/components/schemas/Attendance' } }
+                  summary:
+                    type: object
+                    properties:
+                      totalDays: { type: integer }
+                      present: { type: integer }
+                      late: { type: integer }
+                      absent: { type: integer }
+                      halfDay: { type: integer }
+                      totalWorkHours: { type: number }
+                      averageWorkHours: { type: number }
+
+  /attendance/verify-face:
+    post:
+      tags: [Attendance]
+      summary: Verify face and record attendance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [imageBuffer]
+              properties:
+                imageBuffer: { type: string, description: Base64 image }
+                cameraId: { type: string }
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recognized: { type: boolean }
+                  results: { type: array, items: { type: object } }
+                  attendanceResults: { type: array, items: { type: object } }
+
+  # ─── Cameras ───────────────────────────────────────────────────
+  /cameras:
+    get:
+      tags: [Cameras]
+      summary: List cameras
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [online, offline, maintenance] } }
+        - { name: zone, in: query, schema: { type: string } }
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cameras: { type: array, items: { $ref: '#/components/schemas/Camera' } }
+    post:
+      tags: [Cameras]
+      summary: Add camera (admin only)
+      responses:
+        201:
+          description: Camera created
+
+  /cameras/{id}/connect:
+    post:
+      tags: [Cameras]
+      summary: Connect camera stream (admin only)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        200: { description: Camera connected }
+
+  /cameras/{id}/disconnect:
+    post:
+      tags: [Cameras]
+      summary: Disconnect camera stream (admin only)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        200: { description: Camera disconnected }
+
+  # ─── Dashboard ─────────────────────────────────────────────────
+  /dashboard/stats:
+    get:
+      tags: [Dashboard]
+      summary: Get dashboard statistics (cached 60s)
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stats:
+                    type: object
+                    properties:
+                      totalEmployees: { type: integer }
+                      presentToday: { type: integer }
+                      lateToday: { type: integer }
+                      absentToday: { type: integer }
+                      finesToday: { type: number }
+                  cameras: { type: array, items: { $ref: '#/components/schemas/Camera' } }
+
+  # ─── Fines ─────────────────────────────────────────────────────
+  /fines:
+    get:
+      tags: [Fines]
+      summary: List fines (with filters)
+      parameters:
+        - { $ref: '#/components/parameters/pageParam' }
+        - { $ref: '#/components/parameters/limitParam' }
+        - { name: status, in: query, schema: { type: string, enum: [pending, applied, disputed, waived] } }
+        - { $ref: '#/components/parameters/startDateParam' }
+        - { $ref: '#/components/parameters/endDateParam' }
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/PaginatedResponse' }
+                  - type: object
+                    properties:
+                      fines: { type: array, items: { $ref: '#/components/schemas/Fine' } }
+
+  /fines/user/{userId}:
+    get:
+      tags: [Fines]
+      summary: Get fines for a specific user
+      parameters:
+        - { name: userId, in: path, required: true, schema: { type: string } }
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  fines: { type: array, items: { $ref: '#/components/schemas/Fine' } }
+                  summary:
+                    type: object
+                    properties:
+                      totalFines: { type: integer }
+                      totalAmount: { type: number }
+                      pending: { type: integer }
+                      applied: { type: integer }
+                      disputed: { type: integer }
+                      waived: { type: integer }
+
+  /fines/{id}/dispute:
+    post:
+      tags: [Fines]
+      summary: Dispute a fine
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string }
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  fine: { $ref: '#/components/schemas/Fine' }
+
+  /fines/{id}/resolve:
+    post:
+      tags: [Fines]
+      summary: Resolve a fine dispute (admin only)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [resolution]
+              properties:
+                resolution: { type: string }
+                waive: { type: boolean, default: false }
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  fine: { $ref: '#/components/schemas/Fine' }
+
+  # ─── Fine Rules ────────────────────────────────────────────────
+  /fine-rules:
+    get:
+      tags: [Fine Rules]
+      summary: List fine rules
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rules: { type: array, items: { type: object } }
+    post:
+      tags: [Fine Rules]
+      summary: Create fine rule (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, category, amountType, amountValue]
+              properties:
+                name: { type: string }
+                category: { type: string, enum: [late, absent, safety, ppe] }
+                amountType: { type: string, enum: [fixed, percentage] }
+                amountValue: { type: number, minimum: 0 }
+                maxPerDay: { type: integer }
+                maxPerMonth: { type: integer }
+      responses:
+        201: { description: Fine rule created }
+
+  # ─── Salaries ──────────────────────────────────────────────────
+  /salaries:
+    get:
+      tags: [Salaries]
+      summary: List salary records
+      parameters:
+        - { $ref: '#/components/parameters/pageParam' }
+        - { $ref: '#/components/parameters/limitParam' }
+        - { name: month, in: query, schema: { type: integer, minimum: 1, maximum: 12 } }
+        - { name: year, in: query, schema: { type: integer } }
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/PaginatedResponse' }
+                  - type: object
+                    properties:
+                      salaries: { type: array, items: { $ref: '#/components/schemas/Salary' } }
+
+  /salaries/calculate:
+    post:
+      tags: [Salaries]
+      summary: Calculate salary for a user (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, month, year]
+              properties:
+                userId: { type: string }
+                month: { type: integer, minimum: 1, maximum: 12 }
+                year: { type: integer }
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  salary: { $ref: '#/components/schemas/Salary' }
+
+  /salaries/process-all:
+    post:
+      tags: [Salaries]
+      summary: Process salaries for all employees (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [month, year]
+              properties:
+                month: { type: integer, minimum: 1, maximum: 12 }
+                year: { type: integer }
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results: { type: array, items: { type: object } }
+                  summary:
+                    type: object
+                    properties:
+                      total: { type: integer }
+                      succeeded: { type: integer }
+                      failed: { type: integer }
+
+  /salaries/{id}/payslip:
+    get:
+      tags: [Salaries]
+      summary: Get payslip for a salary record
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  payslip: { type: object }
+
+  # ─── Loans ─────────────────────────────────────────────────────
+  /loans:
+    get:
+      tags: [Loans]
+      summary: List loans
+      parameters:
+        - { $ref: '#/components/parameters/pageParam' }
+        - { $ref: '#/components/parameters/limitParam' }
+        - { name: status, in: query, schema: { type: string, enum: [active, completed, defaulted] } }
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/PaginatedResponse' }
+                  - type: object
+                    properties:
+                      loans: { type: array, items: { $ref: '#/components/schemas/Loan' } }
+
+  /loans/request:
+    post:
+      tags: [Loans]
+      summary: Request a loan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, amount, purpose, installments]
+              properties:
+                userId: { type: string }
+                amount: { type: number, minimum: 1 }
+                purpose: { type: string }
+                installments: { type: integer, minimum: 1, maximum: 12 }
+      responses:
+        201:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  loan: { $ref: '#/components/schemas/Loan' }
+
+  /loans/user/{userId}:
+    get:
+      tags: [Loans]
+      summary: Get loans for a user
+      parameters:
+        - { name: userId, in: path, required: true, schema: { type: string } }
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  loans: { type: array, items: { $ref: '#/components/schemas/Loan' } }
+                  summary: { type: object }
+
+  /loans/{id}/approve:
+    post:
+      tags: [Loans]
+      summary: Approve a loan (admin only)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  loan: { $ref: '#/components/schemas/Loan' }
+
+  /loans/report:
+    get:
+      tags: [Loans]
+      summary: Loan summary report (admin only)
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  report: { type: object }
+
+  # ─── Shifts ────────────────────────────────────────────────────
+  /shifts:
+    get:
+      tags: [Shifts]
+      summary: List shifts
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  shifts: { type: array, items: { $ref: '#/components/schemas/Shift' } }
+    post:
+      tags: [Shifts]
+      summary: Create shift (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, startTime, endTime]
+              properties:
+                name: { type: string }
+                startTime: { type: string, pattern: '^([01]\d|2[0-3]):[0-5]\d$' }
+                endTime: { type: string, pattern: '^([01]\d|2[0-3]):[0-5]\d$' }
+                gracePeriod: { type: integer, default: 15 }
+                workingDays: { type: array, items: { type: integer, minimum: 0, maximum: 6 } }
+      responses:
+        201: { description: Shift created }
+
+  /shifts/assign:
+    post:
+      tags: [Shifts]
+      summary: Assign shift to user (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, shiftId, effectiveFrom]
+              properties:
+                userId: { type: string }
+                shiftId: { type: string }
+                effectiveFrom: { type: string, format: date }
+                effectiveTo: { type: string, format: date }
+      responses:
+        201: { description: Shift assigned }
+
+  # ─── Analytics ─────────────────────────────────────────────────
+  /analytics/attrition-risk:
+    get:
+      tags: [Analytics]
+      summary: Attrition risk analysis (admin only)
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  risks: { type: array, items: { type: object } }
+                  total: { type: integer }
+
+  /analytics/predict/{date}:
+    get:
+      tags: [Analytics]
+      summary: Predict attendance for a date
+      parameters:
+        - { name: date, in: path, required: true, schema: { type: string, format: date } }
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  prediction: { type: object }
+
+  /analytics/anomalies/{userId}/{date}:
+    get:
+      tags: [Analytics]
+      summary: Detect anomalies for user on date
+      parameters:
+        - { name: userId, in: path, required: true, schema: { type: string } }
+        - { name: date, in: path, required: true, schema: { type: string, format: date } }
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  anomalies: { type: array, items: { type: object } }
+
+  /analytics/department-insights:
+    get:
+      tags: [Analytics]
+      summary: Department-level insights (admin only)
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  departments: { type: object }
+
+  # ─── Privacy ───────────────────────────────────────────────────
+  /privacy/anonymize/{userId}:
+    post:
+      tags: [Privacy]
+      summary: Anonymize user data — GDPR right to be forgotten (super-admin only)
+      parameters:
+        - { name: userId, in: path, required: true, schema: { type: string } }
+      responses:
+        200: { description: User data anonymized }
+
+  /privacy/export/{userId}:
+    get:
+      tags: [Privacy]
+      summary: Export user data — GDPR data portability
+      parameters:
+        - { name: userId, in: path, required: true, schema: { type: string } }
+      responses:
+        200: { description: User data export }
+
+  /privacy/enforce-retention:
+    post:
+      tags: [Privacy]
+      summary: Run retention policy cleanup (super-admin only)
+      responses:
+        200: { description: Retention policies enforced }
+
+  /privacy/consent/{userId}:
+    get:
+      tags: [Privacy]
+      summary: Get user consent status
+      parameters:
+        - { name: userId, in: path, required: true, schema: { type: string } }
+      responses:
+        200: { description: Consent data }
+    put:
+      tags: [Privacy]
+      summary: Update user consent
+      parameters:
+        - { name: userId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                faceRecognition: { type: boolean }
+                emotionTracking: { type: boolean }
+                locationTracking: { type: boolean }
+                dataProcessing: { type: boolean }
+      responses:
+        200: { description: Consent updated }
+
+  # ─── Monitoring ────────────────────────────────────────────────
+  /health:
+    get:
+      tags: [Monitoring]
+      summary: Health check (no auth)
+      security: []
+      responses:
+        200: { description: All services healthy }
+        503: { description: One or more services unhealthy }
+
+  /metrics:
+    get:
+      tags: [Monitoring]
+      summary: Application metrics (no auth)
+      security: []
+      responses:
+        200: { description: Request counts, performance, system stats }

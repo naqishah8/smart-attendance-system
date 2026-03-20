@@ -1,5 +1,17 @@
-const tf = require('@tensorflow/tfjs-node');
-const cocoSsd = require('@tensorflow-models/coco-ssd');
+// Lazy-load heavy AI dependencies
+let tf = null;
+let cocoSsd = null;
+
+function loadAIDeps() {
+  if (!tf) {
+    try {
+      tf = require('@tensorflow/tfjs-node');
+      cocoSsd = require('@tensorflow-models/coco-ssd');
+    } catch {
+      // AI deps not installed — service will return defaults
+    }
+  }
+}
 
 class ObjectDetectionService {
   constructor() {
@@ -11,7 +23,8 @@ class ObjectDetectionService {
   }
 
   async loadModel() {
-    // Load pre-trained model (you'd fine-tune on PPE dataset)
+    loadAIDeps();
+    if (!cocoSsd) return;
     this.model = await cocoSsd.load();
     console.log('Object detection model loaded');
   }
@@ -20,7 +33,12 @@ class ObjectDetectionService {
     if (!this.model) await this.loadModel();
 
     const image = await this.bufferToTensor(imageBuffer);
-    const predictions = await this.model.detect(image);
+    let predictions;
+    try {
+      predictions = await this.model.detect(image);
+    } finally {
+      image.dispose(); // Prevent TensorFlow memory leak
+    }
 
     const ppeDetected = {
       helmet: false,
@@ -66,7 +84,12 @@ class ObjectDetectionService {
     if (!this.model) await this.loadModel();
 
     const image = await this.bufferToTensor(imageBuffer);
-    const predictions = await this.model.detect(image);
+    let predictions;
+    try {
+      predictions = await this.model.detect(image);
+    } finally {
+      image.dispose(); // Prevent TensorFlow memory leak
+    }
 
     // Filter for tools (laptop, toolbox, etc.)
     const tools = predictions.filter(p =>

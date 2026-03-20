@@ -1,82 +1,111 @@
+const logger = require('../../utils/logger');
+
 class ARVerificationService {
   constructor() {
     this.siteMarkers = new Map(); // siteId -> marker data
   }
 
   async registerSite(siteId, markerImages, location) {
-    // Extract features from marker images for AR recognition
-    const markers = [];
+    try {
+      if (!siteId || !markerImages || !Array.isArray(markerImages) || markerImages.length === 0) {
+        throw new Error('siteId and at least one marker image are required');
+      }
 
-    for (const image of markerImages) {
-      const features = await this.extractFeatures(image);
-      markers.push({
-        image,
-        features,
-        location
-      });
+      // Extract features from marker images for AR recognition
+      const markers = [];
+
+      for (const image of markerImages) {
+        const features = await this.extractFeatures(image);
+        markers.push({
+          image,
+          features,
+          location
+        });
+      }
+
+      this.siteMarkers.set(siteId, markers);
+
+      return {
+        siteId,
+        markersRegistered: markers.length
+      };
+    } catch (error) {
+      logger.error('Error in registerSite:', error);
+      throw error;
     }
-
-    this.siteMarkers.set(siteId, markers);
-
-    return {
-      siteId,
-      markersRegistered: markers.length
-    };
   }
 
   async extractFeatures(imageBuffer) {
-    // Use computer vision to extract distinctive features
-    // This would use ORB, SIFT, or similar algorithms
+    try {
+      // Use computer vision to extract distinctive features
+      // This would use ORB, SIFT, or similar algorithms
 
-    return {
-      keypoints: [], // Detected keypoints
-      descriptors: [] // Feature descriptors
-    };
+      return {
+        keypoints: [], // Detected keypoints
+        descriptors: [] // Feature descriptors
+      };
+    } catch (error) {
+      logger.error('Error in extractFeatures:', error);
+      throw error;
+    }
   }
 
   async verifyLocation(userId, imageBuffer, gpsLocation) {
-    // First verify GPS is roughly correct
-    if (!this.verifyGPS(gpsLocation)) {
+    try {
+      if (!userId) {
+        throw new Error('userId is required');
+      }
+
+      // First verify GPS is roughly correct
+      if (!this.verifyGPS(gpsLocation)) {
+        return {
+          verified: false,
+          reason: 'GPS location out of range'
+        };
+      }
+
+      // Then verify AR markers
+      const siteMatch = await this.findMatchingSite(imageBuffer);
+
+      if (!siteMatch) {
+        return {
+          verified: false,
+          reason: 'No matching AR markers found'
+        };
+      }
+
+      // Check if user is assigned to this site
+      const isAssigned = await this.checkUserAssignment(userId, siteMatch.siteId);
+
+      if (!isAssigned) {
+        return {
+          verified: false,
+          reason: 'User not assigned to this site',
+          siteMatched: siteMatch.siteId
+        };
+      }
+
+      // All checks passed
       return {
-        verified: false,
-        reason: 'GPS location out of range'
+        verified: true,
+        siteId: siteMatch.siteId,
+        confidence: siteMatch.confidence,
+        timestamp: new Date()
       };
+    } catch (error) {
+      logger.error('Error in verifyLocation:', error);
+      throw error;
     }
-
-    // Then verify AR markers
-    const siteMatch = await this.findMatchingSite(imageBuffer);
-
-    if (!siteMatch) {
-      return {
-        verified: false,
-        reason: 'No matching AR markers found'
-      };
-    }
-
-    // Check if user is assigned to this site
-    const isAssigned = await this.checkUserAssignment(userId, siteMatch.siteId);
-
-    if (!isAssigned) {
-      return {
-        verified: false,
-        reason: 'User not assigned to this site',
-        siteMatched: siteMatch.siteId
-      };
-    }
-
-    // All checks passed
-    return {
-      verified: true,
-      siteId: siteMatch.siteId,
-      confidence: siteMatch.confidence,
-      timestamp: new Date()
-    };
   }
 
   verifyGPS(gpsLocation) {
     // Check if GPS coordinates are within allowed range
-    // This would check against geofenced areas
     if (!gpsLocation || !gpsLocation.lat || !gpsLocation.lng) {
+      return false;
+    }
+
+    // If no sites registered, return false by default (deny by default)
+    if (this.siteMarkers.size === 0) {
       return false;
     }
 
@@ -95,7 +124,7 @@ class ARVerificationService {
       }
     }
 
-    return true; // Default allow if no sites registered
+    return false;
   }
 
   calculateDistance(lat1, lng1, lat2, lng2) {
@@ -116,33 +145,43 @@ class ARVerificationService {
   }
 
   async findMatchingSite(imageBuffer) {
-    // Extract features from current image
-    const currentFeatures = await this.extractFeatures(imageBuffer);
+    try {
+      if (!imageBuffer) {
+        return null;
+      }
 
-    let bestMatch = null;
-    let bestScore = 0;
+      // Extract features from current image
+      const currentFeatures = await this.extractFeatures(imageBuffer);
 
-    // Compare against all registered sites
-    for (const [siteId, markers] of this.siteMarkers.entries()) {
-      for (const marker of markers) {
-        const matchScore = this.compareFeatures(currentFeatures, marker.features);
+      let bestMatch = null;
+      let bestScore = 0;
 
-        if (matchScore > bestScore && matchScore > 0.7) { // Threshold
-          bestScore = matchScore;
-          bestMatch = {
-            siteId,
-            confidence: matchScore
-          };
+      // Compare against all registered sites
+      for (const [siteId, markers] of this.siteMarkers.entries()) {
+        for (const marker of markers) {
+          const matchScore = this.compareFeatures(currentFeatures, marker.features);
+
+          if (matchScore > bestScore && matchScore > 0.7) { // Threshold
+            bestScore = matchScore;
+            bestMatch = {
+              siteId,
+              confidence: matchScore
+            };
+          }
         }
       }
-    }
 
-    return bestMatch;
+      return bestMatch;
+    } catch (error) {
+      logger.error('Error in findMatchingSite:', error);
+      return null;
+    }
   }
 
   compareFeatures(features1, features2) {
     // Compare feature descriptors
     // Return similarity score between 0 and 1
+    if (!features1 || !features2) return 0;
     if (!features1.keypoints.length || !features2.keypoints.length) {
       return 0;
     }
@@ -150,8 +189,34 @@ class ARVerificationService {
   }
 
   async checkUserAssignment(userId, siteId) {
-    // Check if user is assigned to this site for today
-    return true; // Placeholder
+    try {
+      // Check if user is assigned to this site for today
+      return true; // Placeholder
+    } catch (error) {
+      logger.error('Error in checkUserAssignment:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Remove a registered site and its markers to free memory.
+   */
+  removeSite(siteId) {
+    if (!siteId) {
+      throw new Error('siteId is required');
+    }
+
+    const existed = this.siteMarkers.delete(siteId);
+    return { siteId, removed: existed };
+  }
+
+  /**
+   * Remove all registered sites.
+   */
+  clearAllSites() {
+    const count = this.siteMarkers.size;
+    this.siteMarkers.clear();
+    return { removedCount: count };
   }
 }
 

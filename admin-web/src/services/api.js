@@ -1,8 +1,21 @@
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
 
+const REQUEST_TIMEOUT_MS = 30000;
+
 class ApiService {
   async request(endpoint, options = {}) {
     const token = localStorage.getItem('token');
+
+    // Set up AbortController for timeout
+    const abortController = new AbortController();
+    const { signal: externalSignal, ...restOptions } = options;
+
+    // If an external signal is provided, listen to it as well
+    if (externalSignal) {
+      externalSignal.addEventListener('abort', () => abortController.abort());
+    }
+
+    const timeoutId = setTimeout(() => abortController.abort(), REQUEST_TIMEOUT_MS);
 
     const config = {
       headers: {
@@ -10,22 +23,101 @@ class ApiService {
         ...(token && { Authorization: `Bearer ${token}` }),
         ...options.headers
       },
-      ...options
+      ...restOptions,
+      signal: abortController.signal
     };
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+    try {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Request failed' }));
-      throw new Error(error.message || `HTTP ${response.status}`);
+      clearTimeout(timeoutId);
+
+      // Handle 401 - attempt token refresh
+      if (response.status === 401) {
+        const refreshed = await this._tryRefreshToken();
+        if (refreshed) {
+          // Retry the original request with the new token
+          const newToken = localStorage.getItem('token');
+          config.headers.Authorization = `Bearer ${newToken}`;
+          // Create a new abort controller for the retry
+          const retryController = new AbortController();
+          const retryTimeoutId = setTimeout(() => retryController.abort(), REQUEST_TIMEOUT_MS);
+          config.signal = retryController.signal;
+          const retryResponse = await fetch(`${API_BASE_URL}${endpoint}`, config);
+          clearTimeout(retryTimeoutId);
+          if (!retryResponse.ok) {
+            throw new Error('Request failed after token refresh.');
+          }
+          return retryResponse.json();
+        } else {
+          // Refresh failed - clear auth and redirect
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          throw new Error('Your session has expired. Please log in again.');
+        }
+      }
+
+      if (!response.ok) {
+        // Don't expose raw server error messages to users
+        const statusCode = response.status;
+        if (statusCode >= 500) {
+          throw new Error('A server error occurred. Please try again later.');
+        } else if (statusCode === 403) {
+          throw new Error('You do not have permission to perform this action.');
+        } else if (statusCode === 404) {
+          throw new Error('The requested resource was not found.');
+        } else {
+          throw new Error('The request could not be completed. Please try again.');
+        }
+      }
+
+      return response.json();
+    } catch (error) {
+      clearTimeout(timeoutId);
+
+      if (error.name === 'AbortError') {
+        throw new Error('The request timed out. Please check your connection and try again.');
+      }
+
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        throw new Error('Unable to connect to the server. Please check your network connection.');
+      }
+
+      // Re-throw our own error messages
+      throw error;
     }
+  }
 
-    return response.json();
+  async _tryRefreshToken() {
+    try {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) return false;
+
+      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken })
+      });
+
+      if (!response.ok) return false;
+
+      const data = await response.json();
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        if (data.refreshToken) {
+          localStorage.setItem('refreshToken', data.refreshToken);
+        }
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
   }
 
   // Dashboard
-  async getDashboardStats() {
-    return this.request('/dashboard/stats');
+  async getDashboardStats(options = {}) {
+    return this.request('/dashboard/stats', options);
   }
 
   // Employees
@@ -58,23 +150,49 @@ class ApiService {
     });
   }
 
+  // Departments
+  async getDepartments() {
+    return this.request('/departments');
+  }
+
   // Face Registration
   async registerFace(userId, formData) {
     const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE_URL}/employees/${userId}/register-face`, {
-      method: 'POST',
-      headers: {
-        ...(token && { Authorization: `Bearer ${token}` })
-      },
-      body: formData // FormData for file upload
-    });
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Upload failed' }));
-      throw new Error(error.message);
+    const abortController = new AbortController();
+    const timeoutId = setTimeout(() => abortController.abort(), REQUEST_TIMEOUT_MS);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/employees/${userId}/register-face`, {
+        method: 'POST',
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` })
+        },
+        body: formData, // FormData for file upload
+        signal: abortController.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Your session has expired. Please log in again.');
+        }
+        throw new Error('Failed to register face. Please try again.');
+      }
+
+      return response.json();
+    } catch (error) {
+      clearTimeout(timeoutId);
+
+      if (error.name === 'AbortError') {
+        throw new Error('The upload timed out. Please try again.');
+      }
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        throw new Error('Unable to connect to the server. Please check your network connection.');
+      }
+      throw error;
     }
-
-    return response.json();
   }
 
   // Attendance
@@ -224,11 +342,15 @@ class ApiService {
       body: JSON.stringify({ email, password })
     });
     localStorage.setItem('token', data.token);
+    if (data.refreshToken) {
+      localStorage.setItem('refreshToken', data.refreshToken);
+    }
     return data;
   }
 
   logout() {
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
   }
 }
 

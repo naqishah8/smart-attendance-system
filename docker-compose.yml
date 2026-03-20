@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # MongoDB for main database
   mongodb:
     image: mongo:6.0
     container_name: attendance-mongodb
@@ -9,14 +8,13 @@ services:
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: securepassword
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-securepassword}
       MONGO_INITDB_DATABASE: attendance
     volumes:
       - mongodb_data:/data/db
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
 
-  # PostgreSQL for relational data
   postgres:
     image: postgres:15
     container_name: attendance-postgres
@@ -24,13 +22,12 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: securepassword
+      POSTGRES_USER: ${PG_USER:-admin}
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-securepassword}
       POSTGRES_DB: attendance
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  # Redis for caching and real-time data
   redis:
     image: redis:7-alpine
     container_name: attendance-redis
@@ -40,7 +37,6 @@ services:
     volumes:
       - redis_data:/data
 
-  # Backend API
   backend:
     build: ./backend
     container_name: attendance-backend
@@ -53,15 +49,16 @@ services:
       - redis
     environment:
       NODE_ENV: production
-      MONGODB_URI: mongodb://admin:securepassword@mongodb:27017/attendance?authSource=admin
-      POSTGRES_URI: postgresql://admin:securepassword@postgres:5432/attendance
+      MONGODB_URI: mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD:-securepassword}@mongodb:27017/attendance?authSource=admin
+      POSTGRES_URI: postgresql://${PG_USER:-admin}:${PG_PASSWORD:-securepassword}@postgres:5432/attendance
       REDIS_URI: redis://redis:6379
-      JWT_SECRET: your-super-secret-jwt-key
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8080}
+      ENCRYPT_KEY: ${ENCRYPT_KEY:-change-this-encryption-key-32ch}
     volumes:
       - ./backend/uploads:/app/uploads
       - ./backend/payslips:/app/payslips
 
-  # AI Model Server
   ai-server:
     build: ./ai-models
     container_name: attendance-ai
@@ -80,7 +77,6 @@ services:
               count: 1
               capabilities: [gpu]
 
-  # Admin Web App
   admin-web:
     build: ./admin-web
     container_name: attendance-admin
@@ -92,7 +88,6 @@ services:
     environment:
       API_URL: http://backend:3000
 
-  # Nginx for load balancing
   nginx:
     image: nginx:alpine
     container_name: attendance-nginx

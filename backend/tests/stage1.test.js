@@ -82,13 +82,50 @@ describe('STAGE 1: Core Database Models', () => {
         email: 'role@test.com', department: 'HR', role: 'invalid'
       })).rejects.toThrow();
     });
+
+    test('validates email format', async () => {
+      await expect(User.create({
+        employeeId: 'EMP007', firstName: 'A', lastName: 'B',
+        email: 'invalid-email', department: 'HR'
+      })).rejects.toThrow();
+    });
+
+    test('enforces min 0 on baseSalary', async () => {
+      await expect(User.create({
+        employeeId: 'EMP008', firstName: 'A', lastName: 'B',
+        email: 'sal@test.com', department: 'HR', baseSalary: -100
+      })).rejects.toThrow();
+    });
+
+    test('hashes password on save', async () => {
+      const user = await User.create({
+        employeeId: 'EMP009', firstName: 'A', lastName: 'B',
+        email: 'pass@test.com', department: 'HR', password: 'testpass123'
+      });
+      // Password should not be returned in queries
+      const found = await User.findById(user._id);
+      expect(found.password).toBeUndefined();
+      // But should be stored hashed
+      const withPass = await User.findById(user._id).select('+password');
+      expect(withPass.password).not.toBe('testpass123');
+      expect(await withPass.comparePassword('testpass123')).toBe(true);
+    });
+
+    test('uses timestamps option (auto updatedAt)', async () => {
+      const user = await User.create({
+        employeeId: 'EMP010T', firstName: 'A', lastName: 'B',
+        email: 'ts@test.com', department: 'HR'
+      });
+      expect(user.createdAt).toBeDefined();
+      expect(user.updatedAt).toBeDefined();
+    });
   });
 
   describe('Shift Model', () => {
     const { Shift, UserShift } = require('../src/models/Shift');
     const User = require('../src/models/User');
 
-    test('creates a shift', async () => {
+    test('creates a shift with valid time format', async () => {
       const shift = await Shift.create({
         name: 'Morning',
         startTime: '08:00',
@@ -98,6 +135,12 @@ describe('STAGE 1: Core Database Models', () => {
       expect(shift.name).toBe('Morning');
       expect(shift.gracePeriod).toBe(15);
       expect(shift.overtimeRate).toBe(1.5);
+    });
+
+    test('rejects invalid time format', async () => {
+      await expect(Shift.create({
+        name: 'Bad', startTime: '25:00', endTime: '17:00'
+      })).rejects.toThrow();
     });
 
     test('creates a user-shift assignment', async () => {
@@ -203,6 +246,17 @@ describe('STAGE 1: Core Database Models', () => {
       expect(salary.paymentStatus).toBe('pending');
     });
 
+    test('validates month range (1-12)', async () => {
+      const User = require('../src/models/User');
+      const user = await User.create({
+        employeeId: 'EMP041', firstName: 'A', lastName: 'B',
+        email: 'sal2@test.com', department: 'HR'
+      });
+      await expect(Salary.create({
+        userId: user._id, month: 13, year: 2026, baseSalary: 5000
+      })).rejects.toThrow();
+    });
+
     test('creates a bonus rule', async () => {
       const rule = await BonusRule.create({
         name: 'Perfect Attendance',
@@ -233,6 +287,17 @@ describe('STAGE 1: Core Database Models', () => {
       expect(loan.status).toBe('active');
       expect(loan.installmentsPaid).toBe(0);
     });
+
+    test('rejects negative loan amount', async () => {
+      const User = require('../src/models/User');
+      const user = await User.create({
+        employeeId: 'EMP051', firstName: 'A', lastName: 'B',
+        email: 'loan2@test.com', department: 'HR'
+      });
+      await expect(Loan.create({
+        userId: user._id, amount: -100, totalInstallments: 5, startMonth: 1, startYear: 2026
+      })).rejects.toThrow();
+    });
   });
 
   describe('Camera Model', () => {
@@ -251,6 +316,13 @@ describe('STAGE 1: Core Database Models', () => {
     test('fails without rtspUrl', async () => {
       await expect(Camera.create({ name: 'No URL' }))
         .rejects.toThrow();
+    });
+
+    test('validates coordinate bounds', async () => {
+      await expect(Camera.create({
+        name: 'Bad Coords', rtspUrl: 'rtsp://test',
+        location: { coordinates: { lat: 999, lng: 0 } }
+      })).rejects.toThrow();
     });
   });
 });

@@ -2,42 +2,37 @@ const mongoose = require('mongoose');
 
 const SalarySchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  month: { type: Number, required: true }, // 1-12
-  year: { type: Number, required: true },
+  month: { type: Number, required: true, min: 1, max: 12 },
+  year: { type: Number, required: true, min: 2000 },
 
-  // Base calculation
-  baseSalary: { type: Number, required: true },
-  proratedDays: Number,
-  workingDaysInMonth: Number,
-  daysPresent: Number,
-  daysAbsent: Number,
+  baseSalary: { type: Number, required: true, min: 0 },
+  proratedDays: { type: Number, min: 0 },
+  workingDaysInMonth: { type: Number, min: 0, max: 31 },
+  daysPresent: { type: Number, min: 0 },
+  daysAbsent: { type: Number, min: 0 },
 
-  // Earnings
   bonuses: [{
     type: { type: String, enum: ['perfect-attendance', 'overtime', 'performance', 'other'] },
-    amount: Number,
+    amount: { type: Number, min: 0 },
     description: String,
     ruleId: { type: mongoose.Schema.Types.ObjectId }
   }],
-  overtimeEarnings: Number,
-  totalEarnings: Number,
+  overtimeEarnings: { type: Number, default: 0, min: 0 },
+  totalEarnings: { type: Number, default: 0, min: 0 },
 
-  // Deductions
   fines: [{
     fineId: { type: mongoose.Schema.Types.ObjectId, ref: 'Fine' },
-    amount: Number
+    amount: { type: Number, min: 0 }
   }],
   loanDeductions: [{
     loanId: { type: mongoose.Schema.Types.ObjectId },
-    amount: Number
+    amount: { type: Number, min: 0 }
   }],
-  taxDeductions: Number,
-  totalDeductions: Number,
+  taxDeductions: { type: Number, default: 0, min: 0 },
+  totalDeductions: { type: Number, default: 0, min: 0 },
 
-  // Net
-  netSalary: Number,
+  netSalary: { type: Number, default: 0 },
 
-  // Payment
   paymentStatus: {
     type: String,
     enum: ['pending', 'processed', 'paid'],
@@ -45,33 +40,27 @@ const SalarySchema = new mongoose.Schema({
   },
   paymentDate: Date,
   transactionId: String,
+  payslipUrl: String
+}, { timestamps: true });
 
-  // Documents
-  payslipUrl: String,
+// Prevent duplicate salary records for same user/month/year
+SalarySchema.index({ userId: 1, month: 1, year: 1 }, { unique: true });
 
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
-});
-
-// Perfect Attendance Bonus Rule
 const BonusRuleSchema = new mongoose.Schema({
-  name: String,
-  type: { type: String, enum: ['perfect-attendance', 'overtime', 'referral', 'performance'] },
+  name: { type: String, required: true },
+  type: { type: String, enum: ['perfect-attendance', 'overtime', 'referral', 'performance'], required: true },
 
-  // Eligibility
-  minAttendance: { type: Number, default: 100 }, // percentage
-  consecutiveMonths: { type: Number, default: 1 },
+  minAttendance: { type: Number, default: 100, min: 0, max: 100 },
+  consecutiveMonths: { type: Number, default: 1, min: 1 },
 
-  // Reward
-  amountType: { type: String, enum: ['fixed', 'percentage'] },
-  amountValue: Number,
+  amountType: { type: String, enum: ['fixed', 'percentage'], required: true },
+  amountValue: { type: Number, required: true, min: 0 },
 
-  // For overtime
-  overtimeMultiplier: Number,
-  minOvertimeHours: Number,
+  overtimeMultiplier: { type: Number, min: 0 },
+  minOvertimeHours: { type: Number, min: 0 },
 
   isActive: { type: Boolean, default: true }
-});
+}, { timestamps: true });
 
 module.exports = {
   Salary: mongoose.model('Salary', SalarySchema),

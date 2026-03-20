@@ -1,37 +1,37 @@
 const mongoose = require('mongoose');
 
-const ShiftSchema = new mongoose.Schema({
-  name: { type: String, required: true }, // "Morning", "Evening", "Night"
-  startTime: { type: String, required: true }, // "08:00"
-  endTime: { type: String, required: true }, // "17:00"
-  gracePeriod: { type: Number, default: 15 }, // minutes
+const TIME_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
-  // Days of week (0=Sunday, 1=Monday, etc.)
+const ShiftSchema = new mongoose.Schema({
+  name: { type: String, required: true, trim: true },
+  startTime: { type: String, required: true, match: [TIME_REGEX, 'Use HH:MM format'] },
+  endTime: { type: String, required: true, match: [TIME_REGEX, 'Use HH:MM format'] },
+  gracePeriod: { type: Number, default: 15, min: 0, max: 120 },
+
   workingDays: [{ type: Number, min: 0, max: 6 }],
 
-  // Overtime rules
-  overtimeRate: { type: Number, default: 1.5 }, // multiplier
-  overtimeThreshold: { type: Number, default: 8 }, // hours before OT starts
+  overtimeRate: { type: Number, default: 1.5, min: 1, max: 5 },
+  overtimeThreshold: { type: Number, default: 8, min: 0, max: 24 },
 
-  // Break rules
   breaks: [{
     name: String,
-    startTime: String,
-    endTime: String,
+    startTime: { type: String, match: [TIME_REGEX, 'Use HH:MM format'] },
+    endTime: { type: String, match: [TIME_REGEX, 'Use HH:MM format'] },
     isPaid: { type: Boolean, default: true }
   }],
 
   isActive: { type: Boolean, default: true }
-});
+}, { timestamps: true });
 
 const UserShiftSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   shiftId: { type: mongoose.Schema.Types.ObjectId, ref: 'Shift', required: true },
   effectiveFrom: { type: Date, required: true },
   effectiveTo: Date,
-  assignedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  createdAt: { type: Date, default: Date.now }
-});
+  assignedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+}, { timestamps: true });
+
+UserShiftSchema.index({ userId: 1, effectiveFrom: -1 });
 
 module.exports = {
   Shift: mongoose.model('Shift', ShiftSchema),

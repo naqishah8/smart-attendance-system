@@ -2,6 +2,17 @@ class LivenessDetectionService {
   constructor() {
     this.frameBuffer = new Map(); // userId -> array of recent frames
     this.maxFramesPerUser = 10;
+
+    // Cleanup stale frame buffers every 5 minutes (prevents memory leak)
+    this._cleanupInterval = setInterval(() => {
+      const staleThreshold = Date.now() - 5 * 60 * 1000;
+      for (const [userId, frames] of this.frameBuffer) {
+        if (frames.length === 0 || frames[frames.length - 1].timestamp < staleThreshold) {
+          this.frameBuffer.delete(userId);
+        }
+      }
+    }, 5 * 60 * 1000);
+    if (this._cleanupInterval.unref) this._cleanupInterval.unref();
   }
 
   async detectLiveness(userId, currentFrame, faceLandmarks) {

@@ -89,22 +89,24 @@ describe('STAGE 5: Loan & Advance Management', () => {
 
   test('records deductions and completes loan', async () => {
     const loan = await LoanService.requestLoan(testUser._id, 500, 'Test', 2);
+    const fakeSalaryId = new (require('mongoose').Types.ObjectId)();
 
     // First deduction
-    const after1 = await LoanService.recordDeduction(loan._id, null, 4, 2026);
+    const after1 = await LoanService.recordDeduction(loan._id, fakeSalaryId, 4, 2026);
     expect(after1.installmentsPaid).toBe(1);
     expect(after1.status).toBe('active');
 
     // Second deduction - should complete
-    const after2 = await LoanService.recordDeduction(loan._id, null, 5, 2026);
+    const after2 = await LoanService.recordDeduction(loan._id, fakeSalaryId, 5, 2026);
     expect(after2.installmentsPaid).toBe(2);
     expect(after2.status).toBe('completed');
   });
 
   test('prevents duplicate deduction for same month', async () => {
     const loan = await LoanService.requestLoan(testUser._id, 1000, 'Test', 5);
-    await LoanService.recordDeduction(loan._id, null, 4, 2026);
-    await expect(LoanService.recordDeduction(loan._id, null, 4, 2026))
+    const fakeSalaryId = new (require('mongoose').Types.ObjectId)();
+    await LoanService.recordDeduction(loan._id, fakeSalaryId, 4, 2026);
+    await expect(LoanService.recordDeduction(loan._id, fakeSalaryId, 4, 2026))
       .rejects.toThrow('already recorded');
   });
 

@@ -83,7 +83,9 @@ describe('STAGE 9: Privacy & Compliance', () => {
     expect(anonymized.email).toContain('anonymized.com');
     expect(anonymized.phone).toBeNull();
     expect(anonymized.faceEmbeddings).toHaveLength(0);
-    expect(anonymized.bankAccount.accountNumber).toBeNull();
+    // accountNumber is select: false, so it's undefined unless explicitly selected
+    const withBank = await User.findById(user._id).select('+bankAccount.accountNumber');
+    expect(withBank.bankAccount.accountNumber).toBeNull();
     expect(anonymized.isActive).toBe(false);
   });
 
