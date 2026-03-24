@@ -1,0 +1,1576 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-03-24",
+  "brands": [
+    {
+      "id": "hikvision",
+      "name": "Hikvision",
+      "country": "CN",
+      "category": "enterprise",
+      "popular": true,
+      "rtspSupported": true,
+      "defaultPort": 554,
+      "defaultUsername": "admin",
+      "passwordNote": "Set during initial setup",
+      "onvifSupport": true,
+      "channelStartsAt": 1,
+      "rtspPatterns": {
+        "main": "/Streaming/Channels/{ch}01",
+        "sub": "/Streaming/Channels/{ch}02"
+      },
+      "models": [
+        {
+          "series": "DS-2CD2xx6G2",
+          "name": "AcuSense 2nd Gen Fixed",
+          "types": ["bullet", "dome", "turret"],
+          "maxResolution": "4MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["AcuSense AI", "WDR", "IR 30m", "IP67"]
+        },
+        {
+          "series": "DS-2CD2x86G2",
+          "name": "AcuSense 4K Fixed",
+          "types": ["bullet", "dome", "turret"],
+          "maxResolution": "8MP",
+          "maxFps": 25,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["AcuSense AI", "4K UHD", "WDR 120dB", "IR 40m", "IP67", "IK10"]
+        },
+        {
+          "series": "DS-2DE4xxx",
+          "name": "PTZ Network Camera",
+          "types": ["ptz"],
+          "maxResolution": "4MP",
+          "maxFps": 30,
+          "hasPTZ": true,
+          "hasThermal": false,
+          "features": ["25x Optical Zoom", "Smart Tracking", "IR 100m", "IP66"]
+        },
+        {
+          "series": "DS-2TD2xxx",
+          "name": "Thermal Bi-Spectrum",
+          "types": ["bullet", "dome"],
+          "maxResolution": "4MP",
+          "maxFps": 25,
+          "hasPTZ": false,
+          "hasThermal": true,
+          "features": ["Thermal + Optical", "Temperature Measurement", "Fire Detection", "IP66"]
+        },
+        {
+          "series": "DS-2CD6xxx",
+          "name": "Fisheye / Panoramic",
+          "types": ["fisheye", "panoramic"],
+          "maxResolution": "12MP",
+          "maxFps": 20,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["360 Panoramic", "Dewarping", "Virtual PTZ", "IR 15m"]
+        }
+      ]
+    },
+    {
+      "id": "dahua",
+      "name": "Dahua",
+      "country": "CN",
+      "category": "enterprise",
+      "popular": true,
+      "rtspSupported": true,
+      "defaultPort": 554,
+      "defaultUsername": "admin",
+      "passwordNote": "Set during initial setup",
+      "onvifSupport": true,
+      "channelStartsAt": 1,
+      "rtspPatterns": {
+        "main": "/cam/realmonitor?channel={ch}&subtype=0",
+        "sub": "/cam/realmonitor?channel={ch}&subtype=1"
+      },
+      "models": [
+        {
+          "series": "DH-IPC-HDW1xxx",
+          "name": "Lite Series",
+          "types": ["dome", "bullet", "turret"],
+          "maxResolution": "4MP",
+          "maxFps": 25,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Smart IR", "IP67", "PoE"]
+        },
+        {
+          "series": "DH-IPC-HDW3xxx",
+          "name": "WizSense Series",
+          "types": ["dome", "bullet", "turret"],
+          "maxResolution": "8MP",
+          "maxFps": 25,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["WizSense AI", "SMD 3.0", "Perimeter Protection", "IP67"]
+        },
+        {
+          "series": "DH-IPC-HDW5xxx",
+          "name": "WizMind Series",
+          "types": ["dome", "bullet", "turret"],
+          "maxResolution": "8MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["WizMind AI", "Face Recognition", "ANPR", "WDR 140dB", "IP67", "IK10"]
+        },
+        {
+          "series": "DH-SD6xxx",
+          "name": "PTZ Series",
+          "types": ["ptz"],
+          "maxResolution": "4MP",
+          "maxFps": 25,
+          "hasPTZ": true,
+          "hasThermal": false,
+          "features": ["45x Optical Zoom", "Auto Tracking", "Starlight", "IR 250m", "IP67"]
+        },
+        {
+          "series": "DH-TPC-BFxxx",
+          "name": "Thermal Series",
+          "types": ["bullet", "hybrid"],
+          "maxResolution": "4MP",
+          "maxFps": 25,
+          "hasPTZ": false,
+          "hasThermal": true,
+          "features": ["Thermal + Visible", "Temperature Measurement", "Fire Detection", "IP67"]
+        }
+      ]
+    },
+    {
+      "id": "uniview",
+      "name": "Uniview",
+      "country": "CN",
+      "category": "enterprise",
+      "popular": true,
+      "rtspSupported": true,
+      "defaultPort": 554,
+      "defaultUsername": "admin",
+      "passwordNote": "Set during initial setup (min 8 characters)",
+      "onvifSupport": true,
+      "channelStartsAt": 1,
+      "rtspPatterns": {
+        "main": "/unicast/c{ch}/s0/live",
+        "sub": "/unicast/c{ch}/s1/live"
+      },
+      "models": [
+        {
+          "series": "IPC21xx",
+          "name": "Prime I Series",
+          "types": ["bullet", "dome", "turret"],
+          "maxResolution": "4MP",
+          "maxFps": 25,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Smart IR", "IP67", "PoE", "NDAA Compliant"]
+        },
+        {
+          "series": "IPC23xx",
+          "name": "Pro Series",
+          "types": ["bullet", "dome", "turret"],
+          "maxResolution": "8MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["AI Detection", "WDR 120dB", "IR 30m", "IP67", "IK10"]
+        },
+        {
+          "series": "IPC26xx",
+          "name": "LightHunter Series",
+          "types": ["bullet", "dome", "turret"],
+          "maxResolution": "4MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["LightHunter Technology", "Full Color Night Vision", "AI Detection", "IP67"]
+        },
+        {
+          "series": "IPC68xx",
+          "name": "PTZ Series",
+          "types": ["ptz"],
+          "maxResolution": "4MP",
+          "maxFps": 25,
+          "hasPTZ": true,
+          "hasThermal": false,
+          "features": ["33x Optical Zoom", "Auto Tracking", "IR 150m", "IP66"]
+        }
+      ]
+    },
+    {
+      "id": "axis",
+      "name": "Axis Communications",
+      "country": "SE",
+      "category": "enterprise",
+      "popular": true,
+      "rtspSupported": true,
+      "defaultPort": 554,
+      "defaultUsername": "root",
+      "passwordNote": "Set during initial setup via web interface",
+      "onvifSupport": true,
+      "channelStartsAt": 1,
+      "rtspPatterns": {
+        "main": "/axis-media/media.amp",
+        "sub": "/axis-media/media.amp?videocodec=h264&resolution=640x480"
+      },
+      "models": [
+        {
+          "series": "P32xx",
+          "name": "P-Series Fixed Dome",
+          "types": ["dome", "bullet"],
+          "maxResolution": "5MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Lightfinder 2.0", "Forensic WDR", "OptimizedIR", "IP52", "IK10"]
+        },
+        {
+          "series": "Q35xx",
+          "name": "Q-Series Fixed Dome",
+          "types": ["dome"],
+          "maxResolution": "8MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["4K Ultra HD", "Lightfinder 2.0", "Forensic WDR", "IP52", "IK10+", "NEMA 4X"]
+        },
+        {
+          "series": "M30xx",
+          "name": "M-Series Panoramic",
+          "types": ["panoramic", "fisheye", "multi-sensor"],
+          "maxResolution": "12MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["360 Overview", "Dewarping", "Forensic WDR", "IP66", "IK10"]
+        },
+        {
+          "series": "V59xx",
+          "name": "V-Series PTZ",
+          "types": ["ptz"],
+          "maxResolution": "4K",
+          "maxFps": 30,
+          "hasPTZ": true,
+          "hasThermal": false,
+          "features": ["40x Optical Zoom", "Autotracking 2", "Lightfinder 2.0", "IP66", "NEMA 4X"]
+        },
+        {
+          "series": "Q19xx",
+          "name": "Thermal Camera",
+          "types": ["bullet", "fixed"],
+          "maxResolution": "640x480 thermal",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": true,
+          "features": ["Thermal Imaging", "Temperature Alarm", "Zipstream", "IP66", "NEMA 4X"]
+        }
+      ]
+    },
+    {
+      "id": "bosch",
+      "name": "Bosch Security Systems",
+      "country": "DE",
+      "category": "enterprise",
+      "popular": true,
+      "rtspSupported": true,
+      "defaultPort": 554,
+      "defaultUsername": "admin",
+      "passwordNote": "Default password varies by model; set during commissioning",
+      "onvifSupport": true,
+      "channelStartsAt": 1,
+      "rtspPatterns": {
+        "main": "/video?inst={ch}",
+        "sub": "/video?inst={ch}&res=CIF"
+      },
+      "models": [
+        {
+          "series": "NDE-8xxx / NDV-8xxx",
+          "name": "Flexidome IP Starlight 8000i",
+          "types": ["dome"],
+          "maxResolution": "8MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Starlight X", "HDR X", "Intelligent Video Analytics", "IP66", "IK10"]
+        },
+        {
+          "series": "NBE-7xxx / NBN-7xxx",
+          "name": "Dinion IP 7100i",
+          "types": ["bullet", "box"],
+          "maxResolution": "8MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Starlight", "HDR", "Intelligent Video Analytics", "IP67"]
+        },
+        {
+          "series": "NDP-7xxx",
+          "name": "AutoDome IP Starlight 7000i PTZ",
+          "types": ["ptz"],
+          "maxResolution": "2MP",
+          "maxFps": 30,
+          "hasPTZ": true,
+          "hasThermal": false,
+          "features": ["30x Optical Zoom", "Starlight", "Intelligent Tracking", "IP66", "IK10"]
+        },
+        {
+          "series": "NBE-9xxx-TLCP",
+          "name": "Dinion IP Thermal 9000 RM",
+          "types": ["bullet"],
+          "maxResolution": "640x480 thermal",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": true,
+          "features": ["Thermal + Visual", "Intelligent Video Analytics", "Fire Detection", "IP67"]
+        }
+      ]
+    },
+    {
+      "id": "hanwha",
+      "name": "Hanwha Vision",
+      "country": "KR",
+      "category": "enterprise",
+      "popular": true,
+      "rtspSupported": true,
+      "defaultPort": 554,
+      "defaultUsername": "admin",
+      "passwordNote": "Set during initial setup",
+      "onvifSupport": true,
+      "channelStartsAt": 1,
+      "rtspPatterns": {
+        "main": "/profile{ch}/media.smp",
+        "sub": "/profile{ch}/media.smp?streamType=sub"
+      },
+      "models": [
+        {
+          "series": "XNV-8xxx / XND-8xxx / XNO-8xxx",
+          "name": "Wisenet X Series",
+          "types": ["dome", "bullet", "vandal"],
+          "maxResolution": "6MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["AI Engine", "WDR 150dB", "IR 50m", "IP67", "IK10+", "NDAA Compliant"]
+        },
+        {
+          "series": "QNV-8xxx / QND-8xxx / QNO-8xxx",
+          "name": "Wisenet Q Series",
+          "types": ["dome", "bullet", "vandal"],
+          "maxResolution": "5MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["AI-based Object Detection", "WDR 120dB", "IR 30m", "IP66", "IK10"]
+        },
+        {
+          "series": "PNV-Axxxx / PND-Axxxx",
+          "name": "Wisenet P Series AI",
+          "types": ["dome", "bullet"],
+          "maxResolution": "8MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["AI Deep Learning", "Face Recognition", "Attribute Detection", "IP67", "IK10+"]
+        },
+        {
+          "series": "XNP-9xxx / QNP-6xxx",
+          "name": "Wisenet PTZ",
+          "types": ["ptz"],
+          "maxResolution": "4K",
+          "maxFps": 30,
+          "hasPTZ": true,
+          "hasThermal": false,
+          "features": ["40x Optical Zoom", "Auto Tracking", "Gyro Sensor", "IR 200m", "IP66"]
+        }
+      ]
+    },
+    {
+      "id": "pelco",
+      "name": "Pelco",
+      "country": "US",
+      "category": "enterprise",
+      "popular": false,
+      "rtspSupported": true,
+      "defaultPort": 554,
+      "defaultUsername": "admin",
+      "passwordNote": "Set during commissioning",
+      "onvifSupport": true,
+      "channelStartsAt": 1,
+      "rtspPatterns": {
+        "main": "/stream{ch}",
+        "sub": "/stream{ch}s"
+      },
+      "models": [
+        {
+          "series": "IBE / IBD / IBV",
+          "name": "Sarix Enhanced Series",
+          "types": ["bullet", "dome"],
+          "maxResolution": "5MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["SureVision 3.0", "WDR", "IR 30m", "IP66", "IK10"]
+        },
+        {
+          "series": "SD436-PG / SD530-PG",
+          "name": "Spectra Professional PTZ",
+          "types": ["ptz"],
+          "maxResolution": "2MP",
+          "maxFps": 30,
+          "hasPTZ": true,
+          "hasThermal": false,
+          "features": ["36x Optical Zoom", "SureVision", "Autotracking", "IP66"]
+        },
+        {
+          "series": "IMM12xxx",
+          "name": "Optera Panoramic",
+          "types": ["panoramic", "multi-sensor"],
+          "maxResolution": "12MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["180/270/360 Panoramic", "4-Sensor Array", "WDR", "IP66", "IK10"]
+        }
+      ]
+    },
+    {
+      "id": "avigilon",
+      "name": "Avigilon (Motorola Solutions)",
+      "country": "US",
+      "category": "enterprise",
+      "popular": false,
+      "rtspSupported": true,
+      "defaultPort": 554,
+      "defaultUsername": "admin",
+      "passwordNote": "Set during initial configuration via Avigilon Control Center",
+      "onvifSupport": true,
+      "channelStartsAt": 1,
+      "rtspPatterns": {
+        "main": "/",
+        "sub": "/defaultSecondary"
+      },
+      "models": [
+        {
+          "series": "H5A",
+          "name": "H5A Camera Line",
+          "types": ["dome", "bullet", "box"],
+          "maxResolution": "8MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Avigilon Unusual Motion Detection", "HDSM 2.0", "WDR", "IR 50m", "IP66", "IK10"]
+        },
+        {
+          "series": "H5 Pro",
+          "name": "H5 Pro Camera Line",
+          "types": ["box"],
+          "maxResolution": "16MP",
+          "maxFps": 24,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["HDSM SmartCodec", "LightCatcher", "Self-Learning Analytics", "IP66"]
+        },
+        {
+          "series": "H5 PTZ",
+          "name": "H5 PTZ Camera",
+          "types": ["ptz"],
+          "maxResolution": "2MP",
+          "maxFps": 60,
+          "hasPTZ": true,
+          "hasThermal": false,
+          "features": ["36x Optical Zoom", "IR 250m", "Autotracking", "IP66", "IK10"]
+        }
+      ]
+    },
+    {
+      "id": "honeywell",
+      "name": "Honeywell",
+      "country": "US",
+      "category": "enterprise",
+      "popular": false,
+      "rtspSupported": true,
+      "defaultPort": 554,
+      "defaultUsername": "admin",
+      "passwordNote": "Set during initial setup (default varies by model/firmware)",
+      "onvifSupport": true,
+      "channelStartsAt": 1,
+      "rtspPatterns": {
+        "main": "/h264",
+        "sub": "/h264?res=half"
+      },
+      "models": [
+        {
+          "series": "HC35W / HC30W",
+          "name": "Performance Series",
+          "types": ["dome", "bullet", "turret"],
+          "maxResolution": "5MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Smart Motion Detection", "WDR 120dB", "IR 30m", "IP66"]
+        },
+        {
+          "series": "HC60W",
+          "name": "60 Series",
+          "types": ["dome", "bullet"],
+          "maxResolution": "8MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["AI Analytics", "Deep Learning", "WDR 140dB", "IR 50m", "IP67", "IK10"]
+        },
+        {
+          "series": "HDZ302",
+          "name": "PTZ Series",
+          "types": ["ptz"],
+          "maxResolution": "2MP",
+          "maxFps": 30,
+          "hasPTZ": true,
+          "hasThermal": false,
+          "features": ["30x Optical Zoom", "Smart Tracking", "IR 200m", "IP66"]
+        }
+      ]
+    },
+    {
+      "id": "idis",
+      "name": "IDIS",
+      "country": "KR",
+      "category": "enterprise",
+      "popular": false,
+      "rtspSupported": true,
+      "defaultPort": 554,
+      "defaultUsername": "admin",
+      "passwordNote": "Set during initial setup",
+      "onvifSupport": true,
+      "channelStartsAt": 1,
+      "rtspPatterns": {
+        "main": "/video{ch}",
+        "sub": "/video{ch}s"
+      },
+      "models": [
+        {
+          "series": "DC-D4xxx",
+          "name": "DC-D Series Fixed Dome",
+          "types": ["dome", "bullet"],
+          "maxResolution": "8MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["IDIS Smart Failover", "True WDR", "IR 30m", "IP67", "IK10"]
+        },
+        {
+          "series": "DX-xxx",
+          "name": "DX Series AI Box",
+          "types": ["box"],
+          "maxResolution": "2MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["AI Deep Learning", "Face Recognition", "Object Detection"]
+        },
+        {
+          "series": "DC-S6xxx",
+          "name": "DC-S PTZ Series",
+          "types": ["ptz"],
+          "maxResolution": "2MP",
+          "maxFps": 30,
+          "hasPTZ": true,
+          "hasThermal": false,
+          "features": ["36x Optical Zoom", "Auto Tracking", "IR 200m", "IP66"]
+        }
+      ]
+    },
+    {
+      "id": "vivotek",
+      "name": "Vivotek",
+      "country": "TW",
+      "category": "enterprise",
+      "popular": false,
+      "rtspSupported": true,
+      "defaultPort": 554,
+      "defaultUsername": "root",
+      "passwordNote": "Set during initial setup",
+      "onvifSupport": true,
+      "channelStartsAt": 1,
+      "rtspPatterns": {
+        "main": "/live.sdp",
+        "sub": "/live2.sdp"
+      },
+      "models": [
+        {
+          "series": "IB9xxx",
+          "name": "IB-Series Bullet",
+          "types": ["bullet"],
+          "maxResolution": "5MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Smart VCA", "SNV II", "WDR Pro", "IR 30m", "IP67"]
+        },
+        {
+          "series": "FD9xxx",
+          "name": "FD-Series Dome",
+          "types": ["dome"],
+          "maxResolution": "5MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Smart VCA", "SNV II", "WDR Pro", "IR 30m", "IP66", "IK10"]
+        },
+        {
+          "series": "SD9xxx",
+          "name": "SD-Series Speed Dome PTZ",
+          "types": ["ptz"],
+          "maxResolution": "2MP",
+          "maxFps": 30,
+          "hasPTZ": true,
+          "hasThermal": false,
+          "features": ["30x Optical Zoom", "Smart Tracking", "IR 150m", "IP66", "IK10"]
+        }
+      ]
+    },
+    {
+      "id": "geovision",
+      "name": "GeoVision",
+      "country": "TW",
+      "category": "enterprise",
+      "popular": false,
+      "rtspSupported": true,
+      "defaultPort": 8554,
+      "defaultUsername": "admin",
+      "passwordNote": "Default: admin",
+      "onvifSupport": true,
+      "channelStartsAt": 1,
+      "rtspPatterns": {
+        "main": "/CH00{ch}.sdp",
+        "sub": "/CH00{ch}_sub.sdp"
+      },
+      "models": [
+        {
+          "series": "GV-ABL",
+          "name": "GV-ABL Bullet Series",
+          "types": ["bullet"],
+          "maxResolution": "8MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["AI Deep Learning", "WDR", "IR 30m", "IP67"]
+        },
+        {
+          "series": "GV-EFD",
+          "name": "GV-EFD Fixed Dome Series",
+          "types": ["dome"],
+          "maxResolution": "8MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["AI Deep Learning", "WDR", "IR 30m", "IP66", "IK10"]
+        },
+        {
+          "series": "GV-SD",
+          "name": "GV-SD Speed Dome PTZ",
+          "types": ["ptz"],
+          "maxResolution": "2MP",
+          "maxFps": 30,
+          "hasPTZ": true,
+          "hasThermal": false,
+          "features": ["33x Optical Zoom", "Auto Tracking", "IR 150m", "IP67"]
+        }
+      ]
+    },
+    {
+      "id": "mobotix",
+      "name": "Mobotix",
+      "country": "DE",
+      "category": "enterprise",
+      "popular": false,
+      "rtspSupported": true,
+      "defaultPort": 554,
+      "defaultUsername": "admin",
+      "passwordNote": "Default: meinsm",
+      "onvifSupport": true,
+      "channelStartsAt": 1,
+      "rtspPatterns": {
+        "main": "/mobotix.h264",
+        "sub": "/mobotix.h264?quality=low"
+      },
+      "models": [
+        {
+          "series": "MOVE VandalDome / Bullet",
+          "name": "MOVE Series",
+          "types": ["dome", "bullet"],
+          "maxResolution": "8MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["AI Video Analytics", "WDR", "IR 40m", "IP66", "IK10"]
+        },
+        {
+          "series": "c26x / c71",
+          "name": "c-Series Indoor",
+          "types": ["dome", "compact"],
+          "maxResolution": "6MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["MxAnalytics", "Dual Lens Option", "Hemispheric View", "IP20"]
+        },
+        {
+          "series": "p26x / p71",
+          "name": "p-Series Outdoor",
+          "types": ["dome"],
+          "maxResolution": "6MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["MxAnalytics", "Weatherproof", "Hemispheric View", "IP66", "IK10"]
+        }
+      ]
+    },
+    {
+      "id": "flir",
+      "name": "FLIR / Teledyne",
+      "country": "US",
+      "category": "enterprise",
+      "popular": false,
+      "rtspSupported": true,
+      "defaultPort": 554,
+      "defaultUsername": "admin",
+      "passwordNote": "Set during initial setup",
+      "onvifSupport": true,
+      "channelStartsAt": 1,
+      "rtspPatterns": {
+        "main": "/avc",
+        "sub": "/avc?res=half"
+      },
+      "models": [
+        {
+          "series": "CM-62xx / CP-63xx",
+          "name": "Quasar Premium Dome/Bullet",
+          "types": ["dome", "bullet", "mini-dome"],
+          "maxResolution": "4K",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["WDR 120dB", "IR 30m", "IP67", "IK10"]
+        },
+        {
+          "series": "Saros DH-390",
+          "name": "Saros Environmental Dome",
+          "types": ["dome"],
+          "maxResolution": "4K",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Environmental Protection", "WDR", "IR 30m", "IP67", "IK10"]
+        },
+        {
+          "series": "FC / FB Series",
+          "name": "Thermal Imaging Series",
+          "types": ["bullet", "fixed"],
+          "maxResolution": "640x480 thermal",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": true,
+          "features": ["Thermal Imaging", "Temperature Alarms", "Analytics", "IP66"]
+        }
+      ]
+    },
+    {
+      "id": "march_networks",
+      "name": "March Networks",
+      "country": "CA",
+      "category": "enterprise",
+      "popular": false,
+      "rtspSupported": true,
+      "defaultPort": 554,
+      "defaultUsername": "admin",
+      "passwordNote": "Set during initial setup",
+      "onvifSupport": true,
+      "channelStartsAt": 0,
+      "rtspPatterns": {
+        "main": "/live/0/main",
+        "sub": "/live/0/sub"
+      },
+      "models": [
+        {
+          "series": "SE4",
+          "name": "SE4 IP Camera",
+          "types": ["dome", "bullet"],
+          "maxResolution": "4MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Searchlight Analytics", "WDR", "IR 30m", "IP66", "IK10"]
+        },
+        {
+          "series": "ME4",
+          "name": "ME4 Micro-Environment Camera",
+          "types": ["dome", "compact"],
+          "maxResolution": "4MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Discreet Design", "WDR", "IR 20m", "IK08"]
+        }
+      ]
+    },
+    {
+      "id": "tiandy",
+      "name": "Tiandy",
+      "country": "CN",
+      "category": "enterprise",
+      "popular": false,
+      "rtspSupported": true,
+      "defaultPort": 554,
+      "defaultUsername": "admin",
+      "passwordNote": "Set during initial setup",
+      "onvifSupport": true,
+      "channelStartsAt": 1,
+      "rtspPatterns": {
+        "main": "/mpeg4",
+        "sub": "/mpeg4?res=sub"
+      },
+      "models": [
+        {
+          "series": "TC-C32xx / TC-C34xx",
+          "name": "TC-C Fixed Series",
+          "types": ["dome", "bullet", "turret"],
+          "maxResolution": "4MP",
+          "maxFps": 25,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Smart Detection", "IR 30m", "IP67"]
+        },
+        {
+          "series": "TC-C35xxx",
+          "name": "Starlight Series",
+          "types": ["dome", "bullet"],
+          "maxResolution": "5MP",
+          "maxFps": 25,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Starlight Imaging", "Full Color Night", "WDR", "IP67"]
+        },
+        {
+          "series": "TC-H356xxx",
+          "name": "PTZ Series",
+          "types": ["ptz"],
+          "maxResolution": "5MP",
+          "maxFps": 25,
+          "hasPTZ": true,
+          "hasThermal": false,
+          "features": ["33x Optical Zoom", "Auto Tracking", "IR 200m", "IP66"]
+        }
+      ]
+    },
+    {
+      "id": "sunell",
+      "name": "Sunell",
+      "country": "CN",
+      "category": "enterprise",
+      "popular": false,
+      "rtspSupported": true,
+      "defaultPort": 554,
+      "defaultUsername": "admin",
+      "passwordNote": "Default: admin (change on first login)",
+      "onvifSupport": true,
+      "channelStartsAt": 1,
+      "rtspPatterns": {
+        "main": "/stream{ch}",
+        "sub": "/stream{ch}_sub"
+      },
+      "models": [
+        {
+          "series": "SN-IPR57",
+          "name": "SN-IPR Bullet Series",
+          "types": ["bullet"],
+          "maxResolution": "4MP",
+          "maxFps": 25,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Smart Detection", "WDR", "IR 30m", "IP67"]
+        },
+        {
+          "series": "SN-IPD80",
+          "name": "SN-IPD Dome Series",
+          "types": ["dome"],
+          "maxResolution": "8MP",
+          "maxFps": 25,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Smart Detection", "WDR", "IR 30m", "IP67", "IK10"]
+        }
+      ]
+    },
+    {
+      "id": "tvt",
+      "name": "TVT Digital",
+      "country": "CN",
+      "category": "enterprise",
+      "popular": false,
+      "rtspSupported": true,
+      "basedOn": "dahua",
+      "defaultPort": 554,
+      "defaultUsername": "admin",
+      "passwordNote": "Default: 123456 (change immediately)",
+      "onvifSupport": true,
+      "channelStartsAt": 1,
+      "rtspPatterns": {
+        "main": "/cam/realmonitor?channel={ch}&subtype=0",
+        "sub": "/cam/realmonitor?channel={ch}&subtype=1"
+      },
+      "models": [
+        {
+          "series": "TD-9xxx",
+          "name": "TD-Series Fixed Camera",
+          "types": ["dome", "bullet", "turret"],
+          "maxResolution": "8MP",
+          "maxFps": 25,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Smart Detection", "WDR", "IR 30m", "IP67"]
+        },
+        {
+          "series": "TD-8xxx",
+          "name": "TD PTZ Series",
+          "types": ["ptz"],
+          "maxResolution": "2MP",
+          "maxFps": 25,
+          "hasPTZ": true,
+          "hasThermal": false,
+          "features": ["20x Optical Zoom", "Auto Tracking", "IR 100m", "IP66"]
+        }
+      ]
+    },
+    {
+      "id": "milesight",
+      "name": "Milesight",
+      "country": "CN",
+      "category": "enterprise",
+      "popular": false,
+      "rtspSupported": true,
+      "defaultPort": 554,
+      "defaultUsername": "admin",
+      "passwordNote": "Set during initial setup",
+      "onvifSupport": true,
+      "channelStartsAt": 1,
+      "rtspPatterns": {
+        "main": "/main",
+        "sub": "/sub"
+      },
+      "models": [
+        {
+          "series": "MS-C5xxx",
+          "name": "MS-C Series Fixed",
+          "types": ["dome", "bullet", "turret"],
+          "maxResolution": "5MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Smart Detection", "WDR", "IR 30m", "IP67"]
+        },
+        {
+          "series": "MS-C8xxx-PA",
+          "name": "Pro AI Series",
+          "types": ["dome", "bullet"],
+          "maxResolution": "8MP",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["AI Engine", "Face Recognition", "LPR", "WDR 120dB", "IP67", "IK10"]
+        },
+        {
+          "series": "MS-C5371-X23HPB",
+          "name": "PTZ Series",
+          "types": ["ptz"],
+          "maxResolution": "5MP",
+          "maxFps": 30,
+          "hasPTZ": true,
+          "hasThermal": false,
+          "features": ["23x Optical Zoom", "Auto Tracking", "IR 200m", "IP66"]
+        }
+      ]
+    },
+    {
+      "id": "zkteco",
+      "name": "ZKTeco",
+      "country": "CN",
+      "category": "enterprise",
+      "popular": false,
+      "rtspSupported": true,
+      "defaultPort": 554,
+      "defaultUsername": "admin",
+      "passwordNote": "Set during initial setup",
+      "onvifSupport": true,
+      "channelStartsAt": 1,
+      "rtspPatterns": {
+        "main": "/live/main",
+        "sub": "/live/sub"
+      },
+      "models": [
+        {
+          "series": "BL-85xx",
+          "name": "BL-Series Bullet",
+          "types": ["bullet"],
+          "maxResolution": "5MP",
+          "maxFps": 25,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Smart Detection", "WDR", "IR 30m", "IP67"]
+        },
+        {
+          "series": "DL-85xx",
+          "name": "DL-Series Dome",
+          "types": ["dome"],
+          "maxResolution": "5MP",
+          "maxFps": 25,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Smart Detection", "WDR", "IR 20m", "IP66", "IK10"]
+        }
+      ]
+    },
+    {
+      "id": "reolink",
+      "name": "Reolink",
+      "country": "CN",
+      "category": "prosumer",
+      "popular": true,
+      "rtspSupported": true,
+      "defaultPort": 554,
+      "defaultUsername": "admin",
+      "passwordNote": "Set during initial setup via Reolink app",
+      "onvifSupport": true,
+      "channelStartsAt": 1,
+      "rtspPatterns": {
+        "main": "/h264Preview_0{ch}_main",
+        "sub": "/h264Preview_0{ch}_sub"
+      },
+      "models": [
+        {
+          "series": "RLC-810A / RLC-820A / RLC-842A",
+          "name": "RLC PoE Series",
+          "types": ["dome", "bullet", "turret"],
+          "maxResolution": "8MP",
+          "maxFps": 25,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Person/Vehicle Detection", "IR Night Vision", "PoE", "IP66", "MicroSD Slot"]
+        },
+        {
+          "series": "Argus 3 Pro / Argus PT / Argus Eco",
+          "name": "Argus Battery Series",
+          "types": ["bullet", "ptz-capable"],
+          "maxResolution": "4MP",
+          "maxFps": 15,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Rechargeable Battery", "Solar Panel Compatible", "Person Detection", "WiFi", "IP65"]
+        },
+        {
+          "series": "Duo 2 PoE / Duo 3 PoE",
+          "name": "Duo Dual-Lens Series",
+          "types": ["bullet"],
+          "maxResolution": "4K+4K",
+          "maxFps": 25,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Dual Lens", "180 FoV", "Smart Detection", "Color Night Vision", "PoE", "IP66"]
+        }
+      ]
+    },
+    {
+      "id": "amcrest",
+      "name": "Amcrest",
+      "country": "US",
+      "category": "prosumer",
+      "popular": true,
+      "rtspSupported": true,
+      "basedOn": "dahua",
+      "defaultPort": 554,
+      "defaultUsername": "admin",
+      "passwordNote": "Set during initial setup via Amcrest app or web interface",
+      "onvifSupport": true,
+      "channelStartsAt": 1,
+      "rtspPatterns": {
+        "main": "/cam/realmonitor?channel={ch}&subtype=0",
+        "sub": "/cam/realmonitor?channel={ch}&subtype=1"
+      },
+      "models": [
+        {
+          "series": "IP5M-T1179EW / IP5M-B1186EW",
+          "name": "IP5M Series",
+          "types": ["turret", "bullet", "dome"],
+          "maxResolution": "5MP",
+          "maxFps": 20,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Smart Detection", "IR Night Vision", "PoE", "IP67", "MicroSD Slot"]
+        },
+        {
+          "series": "IP8M-2493EW / IP8M-T2599EW",
+          "name": "UltraHD 4K Series",
+          "types": ["turret", "bullet", "dome"],
+          "maxResolution": "8MP",
+          "maxFps": 15,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["4K UHD", "Smart Detection", "IR 30m", "PoE", "IP67"]
+        },
+        {
+          "series": "IP4M-1051W / IP2M-841",
+          "name": "PTZ WiFi Series",
+          "types": ["ptz", "dome"],
+          "maxResolution": "4MP",
+          "maxFps": 25,
+          "hasPTZ": true,
+          "hasThermal": false,
+          "features": ["Pan/Tilt", "WiFi", "Smart Tracking", "IR Night Vision", "2-Way Audio"]
+        }
+      ]
+    },
+    {
+      "id": "lorex",
+      "name": "Lorex",
+      "country": "CA",
+      "category": "prosumer",
+      "popular": true,
+      "rtspSupported": true,
+      "basedOn": "dahua",
+      "defaultPort": 554,
+      "defaultUsername": "admin",
+      "passwordNote": "Set during initial setup via Lorex app",
+      "onvifSupport": true,
+      "channelStartsAt": 1,
+      "rtspPatterns": {
+        "main": "/cam/realmonitor?channel={ch}&subtype=0",
+        "sub": "/cam/realmonitor?channel={ch}&subtype=1"
+      },
+      "models": [
+        {
+          "series": "E893AB / E894AB",
+          "name": "Deterrence Series",
+          "types": ["bullet", "dome", "turret"],
+          "maxResolution": "4K",
+          "maxFps": 25,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Active Deterrence", "Color Night Vision", "Smart Detection", "PoE", "IP67"]
+        },
+        {
+          "series": "N4K1-168WB",
+          "name": "Fusion 4K System",
+          "types": ["dome", "bullet"],
+          "maxResolution": "4K",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Fusion Wired+WiFi", "Smart Detection", "Color Night Vision", "2TB HDD Included"]
+        },
+        {
+          "series": "LNB9393 / LNE9393",
+          "name": "4K Ultra HD Series",
+          "types": ["bullet", "dome"],
+          "maxResolution": "4K",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["4K Ultra HD", "Color Night Vision", "Smart Motion Detection", "PoE", "IP67"]
+        }
+      ]
+    },
+    {
+      "id": "swann",
+      "name": "Swann",
+      "country": "AU",
+      "category": "prosumer",
+      "popular": false,
+      "rtspSupported": true,
+      "basedOn": "dahua",
+      "defaultPort": 554,
+      "defaultUsername": "admin",
+      "passwordNote": "Set during initial setup via Swann Security app",
+      "onvifSupport": true,
+      "channelStartsAt": 1,
+      "rtspPatterns": {
+        "main": "/cam/realmonitor?channel={ch}&subtype=0",
+        "sub": "/cam/realmonitor?channel={ch}&subtype=1"
+      },
+      "models": [
+        {
+          "series": "SWNHD-900BE / SWPRO-4KRLPK",
+          "name": "Enforcer Series",
+          "types": ["bullet", "dome"],
+          "maxResolution": "4K",
+          "maxFps": 25,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Red/Blue Flashing Lights", "Siren", "Color Night Vision", "PoE", "IP66"]
+        },
+        {
+          "series": "SWNHD-1200BE",
+          "name": "Master Series",
+          "types": ["bullet", "dome"],
+          "maxResolution": "12MP",
+          "maxFps": 20,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["12MP Super HD", "Smart Detection", "Color Night Vision", "PoE", "IP66"]
+        }
+      ]
+    },
+    {
+      "id": "ubiquiti",
+      "name": "Ubiquiti UniFi Protect",
+      "country": "US",
+      "category": "prosumer",
+      "popular": true,
+      "rtspSupported": true,
+      "defaultPort": 7447,
+      "defaultUsername": "ubnt",
+      "passwordNote": "Managed via UniFi Protect application; RTSP must be enabled per camera",
+      "onvifSupport": false,
+      "channelStartsAt": 1,
+      "rtspPatterns": {
+        "main": "/{camera_id}",
+        "sub": "/{camera_id}?quality=low"
+      },
+      "note": "RTSP streams are served by the UniFi NVR (Cloud Key/UNVR) on port 7447, not the camera directly. Camera ID can be found in the UniFi Protect web UI.",
+      "models": [
+        {
+          "series": "UVC-G4-BULLET",
+          "name": "G4 Bullet",
+          "types": ["bullet"],
+          "maxResolution": "4MP",
+          "maxFps": 24,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Smart Detection", "IR Night Vision", "Built-in Mic", "PoE", "IP67"]
+        },
+        {
+          "series": "UVC-G4-DOME",
+          "name": "G4 Dome",
+          "types": ["dome"],
+          "maxResolution": "4MP",
+          "maxFps": 24,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Smart Detection", "IR Night Vision", "Built-in Mic", "PoE", "IP66", "IK10"]
+        },
+        {
+          "series": "UVC-G4-PTZ",
+          "name": "G4 PTZ",
+          "types": ["ptz"],
+          "maxResolution": "4K",
+          "maxFps": 24,
+          "hasPTZ": true,
+          "hasThermal": false,
+          "features": ["22x Optical Zoom", "Smart Tracking", "IR 200m", "PoE++", "IP66"]
+        }
+      ]
+    },
+    {
+      "id": "provision_isr",
+      "name": "Provision-ISR",
+      "country": "IL",
+      "category": "prosumer",
+      "popular": false,
+      "rtspSupported": true,
+      "basedOn": "dahua",
+      "defaultPort": 554,
+      "defaultUsername": "admin",
+      "passwordNote": "Set during initial setup",
+      "onvifSupport": true,
+      "channelStartsAt": 1,
+      "rtspPatterns": {
+        "main": "/cam/realmonitor?channel={ch}&subtype=0",
+        "sub": "/cam/realmonitor?channel={ch}&subtype=1"
+      },
+      "models": [
+        {
+          "series": "I4-340IPSVF / I4-380IPSMVF",
+          "name": "I-Series Fixed",
+          "types": ["dome", "bullet", "turret"],
+          "maxResolution": "8MP",
+          "maxFps": 25,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Smart Detection", "WDR", "IR 30m", "PoE", "IP66"]
+        },
+        {
+          "series": "S-Sight DI-340IPSVF",
+          "name": "S-Sight Series",
+          "types": ["dome", "bullet"],
+          "maxResolution": "4MP",
+          "maxFps": 25,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Smart IR", "WDR", "IR 25m", "PoE", "IP66"]
+        }
+      ]
+    },
+    {
+      "id": "tplink_tapo",
+      "name": "TP-Link Tapo",
+      "country": "CN",
+      "category": "consumer",
+      "popular": true,
+      "rtspSupported": true,
+      "defaultPort": 554,
+      "defaultUsername": "admin",
+      "passwordNote": "Uses Tapo account credentials (cloud account email and password)",
+      "onvifSupport": true,
+      "channelStartsAt": 1,
+      "rtspPatterns": {
+        "main": "/stream1",
+        "sub": "/stream2"
+      },
+      "models": [
+        {
+          "series": "C200 / C210 / C212",
+          "name": "C200 Series Pan/Tilt Indoor",
+          "types": ["pan-tilt", "indoor"],
+          "maxResolution": "2K",
+          "maxFps": 15,
+          "hasPTZ": true,
+          "hasThermal": false,
+          "features": ["Pan 360 / Tilt 114", "Motion Detection", "Night Vision", "2-Way Audio", "WiFi", "MicroSD"]
+        },
+        {
+          "series": "C310 / C320WS",
+          "name": "C310 Series Outdoor",
+          "types": ["bullet"],
+          "maxResolution": "3MP",
+          "maxFps": 15,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Weatherproof", "Night Vision 30m", "Motion Detection", "WiFi", "IP66", "MicroSD"]
+        },
+        {
+          "series": "C520WS / C525WS",
+          "name": "C520WS Outdoor Pan/Tilt",
+          "types": ["pan-tilt", "outdoor"],
+          "maxResolution": "4MP",
+          "maxFps": 15,
+          "hasPTZ": true,
+          "hasThermal": false,
+          "features": ["Pan 360 / Tilt 130", "Starlight Sensor", "Color Night Vision", "WiFi", "IP66", "MicroSD"]
+        }
+      ]
+    },
+    {
+      "id": "wyze",
+      "name": "Wyze",
+      "country": "US",
+      "category": "consumer",
+      "popular": true,
+      "rtspSupported": true,
+      "defaultPort": 554,
+      "defaultUsername": "admin",
+      "passwordNote": "Set in RTSP firmware settings; requires RTSP-compatible firmware",
+      "onvifSupport": false,
+      "channelStartsAt": 1,
+      "rtspPatterns": {
+        "main": "/live",
+        "sub": null
+      },
+      "note": "RTSP requires flashing special RTSP firmware or using third-party solutions like docker-wyze-bridge. Not all models support RTSP firmware.",
+      "models": [
+        {
+          "series": "WYZEC3",
+          "name": "Wyze Cam v3",
+          "types": ["indoor-outdoor", "compact"],
+          "maxResolution": "1080p",
+          "maxFps": 20,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Starlight Sensor", "Color Night Vision", "Motion Detection", "IP65", "MicroSD"]
+        },
+        {
+          "series": "WYZECP2",
+          "name": "Wyze Cam Pan v2",
+          "types": ["pan-tilt", "indoor"],
+          "maxResolution": "1080p",
+          "maxFps": 20,
+          "hasPTZ": true,
+          "hasThermal": false,
+          "features": ["Pan 360 / Tilt 93", "Motion Tracking", "Night Vision", "2-Way Audio", "MicroSD"]
+        }
+      ]
+    },
+    {
+      "id": "eufy",
+      "name": "Eufy Security (Anker)",
+      "country": "CN",
+      "category": "consumer",
+      "popular": true,
+      "rtspSupported": true,
+      "defaultPort": 554,
+      "defaultUsername": "admin",
+      "passwordNote": "RTSP must be enabled in Eufy Security app settings; uses a generated stream URL",
+      "onvifSupport": false,
+      "channelStartsAt": 0,
+      "rtspPatterns": {
+        "main": "/live0",
+        "sub": null
+      },
+      "note": "RTSP support must be enabled per camera in the Eufy Security app. Not all models support RTSP.",
+      "models": [
+        {
+          "series": "C24 Indoor / E220",
+          "name": "Indoor Cam C24",
+          "types": ["indoor", "compact"],
+          "maxResolution": "2K",
+          "maxFps": 15,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["AI Person Detection", "Night Vision", "2-Way Audio", "WiFi", "MicroSD"]
+        },
+        {
+          "series": "C24 Outdoor / E210",
+          "name": "Outdoor Cam C24",
+          "types": ["bullet", "outdoor"],
+          "maxResolution": "2K",
+          "maxFps": 15,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["AI Person Detection", "Spotlight", "Night Vision", "WiFi", "IP67", "MicroSD"]
+        }
+      ]
+    },
+    {
+      "id": "ring",
+      "name": "Ring (Amazon)",
+      "country": "US",
+      "category": "consumer",
+      "popular": true,
+      "rtspSupported": false,
+      "defaultPort": null,
+      "defaultUsername": null,
+      "passwordNote": null,
+      "onvifSupport": false,
+      "channelStartsAt": null,
+      "rtspPatterns": null,
+      "note": "Ring cameras do not support RTSP or ONVIF. Video is only accessible through the Ring app or Ring.com. Third-party workarounds exist (e.g., ring-mqtt, Scrypted) but are not officially supported.",
+      "models": [
+        {
+          "series": "Stick Up Cam / Indoor Cam",
+          "name": "Ring Indoor/Outdoor Cam",
+          "types": ["indoor", "outdoor", "compact"],
+          "maxResolution": "1080p",
+          "maxFps": 15,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Motion Detection", "2-Way Audio", "WiFi", "Cloud Recording (subscription)"]
+        },
+        {
+          "series": "Spotlight Cam / Floodlight Cam",
+          "name": "Ring Spotlight/Floodlight Cam",
+          "types": ["bullet", "outdoor"],
+          "maxResolution": "1080p",
+          "maxFps": 15,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Built-in Spotlight/Floodlight", "Siren", "Motion Detection", "WiFi", "Cloud Recording (subscription)"]
+        }
+      ]
+    },
+    {
+      "id": "nest",
+      "name": "Google Nest",
+      "country": "US",
+      "category": "consumer",
+      "popular": true,
+      "rtspSupported": false,
+      "defaultPort": null,
+      "defaultUsername": null,
+      "passwordNote": null,
+      "onvifSupport": false,
+      "channelStartsAt": null,
+      "rtspPatterns": null,
+      "note": "Google Nest cameras do not support RTSP or ONVIF. Video is only accessible through the Google Home app. Previous Nest Cam models with the Works With Nest API have been deprecated. Some workarounds exist via Google SDM API (paid) or Scrypted.",
+      "models": [
+        {
+          "series": "Nest Cam (indoor, wired)",
+          "name": "Nest Cam Indoor",
+          "types": ["indoor", "compact"],
+          "maxResolution": "1080p",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["HDR", "Person/Pet/Vehicle Detection", "2-Way Audio", "WiFi", "Cloud Recording (Nest Aware subscription)"]
+        },
+        {
+          "series": "Nest Cam (outdoor or floodlight)",
+          "name": "Nest Cam Outdoor",
+          "types": ["outdoor", "compact"],
+          "maxResolution": "1080p",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["HDR", "Person/Pet/Vehicle Detection", "Night Vision", "WiFi", "IP54", "Cloud Recording (Nest Aware subscription)"]
+        }
+      ]
+    },
+    {
+      "id": "arlo",
+      "name": "Arlo Technologies",
+      "country": "US",
+      "category": "consumer",
+      "popular": true,
+      "rtspSupported": false,
+      "defaultPort": null,
+      "defaultUsername": null,
+      "passwordNote": null,
+      "onvifSupport": false,
+      "channelStartsAt": null,
+      "rtspPatterns": null,
+      "note": "Arlo cameras do not natively support RTSP. The older Arlo Pro 2 had a limited RTSP feature via the base station, but it has been discontinued. Current Arlo cameras are cloud-only.",
+      "models": [
+        {
+          "series": "Arlo Pro 5 / Ultra 2",
+          "name": "Arlo Pro / Ultra Wireless",
+          "types": ["outdoor", "compact"],
+          "maxResolution": "4K",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Wire-Free", "Rechargeable Battery", "Color Night Vision", "2K/4K HDR", "WiFi 6", "Cloud Recording (Arlo Secure subscription)"]
+        },
+        {
+          "series": "Arlo Essential Indoor / Essential XL",
+          "name": "Arlo Essential Series",
+          "types": ["indoor", "outdoor", "compact"],
+          "maxResolution": "2K",
+          "maxFps": 30,
+          "hasPTZ": false,
+          "hasThermal": false,
+          "features": ["Wire-Free Option", "Motion Detection", "2-Way Audio", "WiFi", "Cloud Recording (Arlo Secure subscription)"]
+        }
+      ]
+    }
+  ],
+  "categories": {
+    "enterprise": {
+      "label": "Enterprise / Commercial",
+      "description": "Professional-grade surveillance cameras for businesses, government, and large-scale deployments. Full RTSP and ONVIF support, advanced analytics, and ruggedized hardware."
+    },
+    "prosumer": {
+      "label": "Prosumer / SMB",
+      "description": "Mid-range cameras suitable for small businesses and advanced home users. Generally support RTSP and ONVIF with simpler setup than enterprise models."
+    },
+    "consumer": {
+      "label": "Consumer / Smart Home",
+      "description": "Consumer-oriented smart home cameras. RTSP support varies widely; many are cloud-dependent with limited local streaming options."
+    }
+  },
+  "rtspUrlFormat": "rtsp://{username}:{password}@{host}:{port}{path}",
+  "commonPorts": {
+    "rtsp": [554, 8554, 7447],
+    "http": [80, 8080, 443],
+    "onvif": [80, 8080, 2020]
+  }
+}

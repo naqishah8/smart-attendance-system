@@ -335,6 +335,23 @@ class ApiService {
     });
   }
 
+  // Camera Brands
+  async getCameraBrands(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/cameras/brands?${query}`);
+  }
+
+  async getCameraBrand(brandId) {
+    return this.request(`/cameras/brands/${brandId}`);
+  }
+
+  async buildRtspUrl(data) {
+    return this.request('/cameras/build-rtsp-url', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
   // Notifications
   async getNotifications(params = {}) {
     const query = new URLSearchParams(params).toString();

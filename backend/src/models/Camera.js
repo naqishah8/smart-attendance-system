@@ -36,6 +36,14 @@ const CameraSchema = new mongoose.Schema({
   },
 
   rtspUrl: { type: String, required: true },
+
+  // Brand metadata (set by wizard, null for manual entry)
+  brand: {
+    id: String,
+    name: String,
+    modelSeries: String,
+    modelName: String,
+  },
   username: { type: String, set: encrypt, get: decrypt },
   password: { type: String, set: encrypt, get: decrypt, select: false },
 
