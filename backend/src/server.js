@@ -56,6 +56,10 @@ app.use('/api/shifts', authMiddleware, require('./api/routes/shifts'));
 app.use('/api/dashboard', authMiddleware, require('./api/routes/dashboard'));
 app.use('/api/analytics', authMiddleware, require('./api/routes/analytics'));
 app.use('/api/privacy', authMiddleware, require('./api/routes/privacy'));
+app.use('/api/notifications', authMiddleware, require('./api/routes/notifications'));
+app.use('/api/insights', authMiddleware, require('./api/routes/insights'));
+app.use('/api/geofence', authMiddleware, require('./api/routes/geofence'));
+app.use('/api/leaves', authMiddleware, require('./api/routes/leaves'));
 
 // ─── Error Handling ───────────────────────────────────────────────
 app.use(notFoundHandler);
@@ -96,6 +100,14 @@ const start = async () => {
     // Create additional indexes (non-blocking, non-fatal)
     const createIndexes = require('./config/databaseIndexes');
     createIndexes().catch(err => logger.error('Index creation failed (non-fatal):', err));
+
+    // Initialize leave policies
+    const LeaveService = require('./services/hr/LeaveService');
+    LeaveService.initDefaultPolicies().catch(err => logger.error('Leave policy init failed (non-fatal):', err));
+
+    // Start cron scheduler
+    const initScheduler = require('./cron/scheduler');
+    initScheduler();
 
     const PORT = process.env.PORT || 3000;
     server.listen(PORT, () => {

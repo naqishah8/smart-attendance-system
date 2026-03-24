@@ -184,6 +184,50 @@ class ApiService {
     });
   }
 
+  // Notifications
+  async getNotifications(page = 1) {
+    return this.request(`/notifications?page=${page}&limit=20`);
+  }
+
+  async markNotificationRead(id) {
+    return this.request(`/notifications/${id}/read`, { method: 'PUT' });
+  }
+
+  async respondToAbsence(notificationId, response, note) {
+    return this.request(`/notifications/${notificationId}/respond`, {
+      method: 'POST',
+      body: JSON.stringify({ response, note })
+    });
+  }
+
+  // Geofence
+  async verifyLocation(data) {
+    return this.request('/geofence/verify', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  // Leaves
+  async applyLeave(data) {
+    return this.request('/leaves/apply', { method: 'POST', body: JSON.stringify(data) });
+  }
+
+  async getLeaveRequests(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/leaves?${query}`);
+  }
+
+  async getLeaveBalance(year) {
+    return this.request(`/leaves/balance?year=${year || new Date().getFullYear()}`);
+  }
+
+  async cancelLeave(id, reason) {
+    return this.request(`/leaves/${id}/cancel`, {
+      method: 'PUT', body: JSON.stringify({ reason })
+    });
+  }
+
   // Profile
   async getProfile() {
     return this.request('/auth/profile');

@@ -335,6 +335,158 @@ class ApiService {
     });
   }
 
+  // Notifications
+  async getNotifications(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/notifications?${query}`);
+  }
+
+  async getAdminNotifications(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/notifications/admin?${query}`);
+  }
+
+  async sendNotification(data) {
+    return this.request('/notifications', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async markNotificationRead(id) {
+    return this.request(`/notifications/${id}/read`, { method: 'PUT' });
+  }
+
+  async respondToAbsence(notificationId, response, note) {
+    return this.request(`/notifications/${notificationId}/respond`, {
+      method: 'POST',
+      body: JSON.stringify({ response, note })
+    });
+  }
+
+  // Insights
+  async getInsights(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/insights?${query}`);
+  }
+
+  async getInsightsSummary() {
+    return this.request('/insights/summary');
+  }
+
+  async runInsightsAnalysis() {
+    return this.request('/insights/run', { method: 'POST' });
+  }
+
+  async acknowledgeInsight(id, status = 'acknowledged') {
+    return this.request(`/insights/${id}/acknowledge`, {
+      method: 'PUT',
+      body: JSON.stringify({ status })
+    });
+  }
+
+  async dismissInsight(id) {
+    return this.request(`/insights/${id}`, { method: 'DELETE' });
+  }
+
+  // Geofence
+  async getOfficeSites() {
+    return this.request('/geofence');
+  }
+
+  async createOfficeSite(data) {
+    return this.request('/geofence', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async verifyLocation(data) {
+    return this.request('/geofence/verify', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  // Leaves & HR
+  async applyLeave(data) {
+    return this.request('/leaves/apply', { method: 'POST', body: JSON.stringify(data) });
+  }
+
+  async getLeaveRequests(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/leaves?${query}`);
+  }
+
+  async getLeaveBalance(year) {
+    return this.request(`/leaves/balance?year=${year || new Date().getFullYear()}`);
+  }
+
+  async reviewLeave(id, action, note) {
+    return this.request(`/leaves/${id}/review`, {
+      method: 'PUT', body: JSON.stringify({ action, note })
+    });
+  }
+
+  async cancelLeave(id, reason) {
+    return this.request(`/leaves/${id}/cancel`, {
+      method: 'PUT', body: JSON.stringify({ reason })
+    });
+  }
+
+  async getLeaveCalendar(month, year, department) {
+    const params = new URLSearchParams({ month, year });
+    if (department) params.set('department', department);
+    return this.request(`/leaves/calendar?${params}`);
+  }
+
+  async getLeavePolicies() {
+    return this.request('/leaves/policies');
+  }
+
+  async getHolidays(year) {
+    return this.request(`/leaves/holidays?year=${year || new Date().getFullYear()}`);
+  }
+
+  async addHoliday(data) {
+    return this.request('/leaves/holidays', { method: 'POST', body: JSON.stringify(data) });
+  }
+
+  async deleteHoliday(id) {
+    return this.request(`/leaves/holidays/${id}`, { method: 'DELETE' });
+  }
+
+  async requestOvertime(data) {
+    return this.request('/leaves/overtime', { method: 'POST', body: JSON.stringify(data) });
+  }
+
+  async getOvertimeRequests(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/leaves/overtime?${query}`);
+  }
+
+  async reviewOvertime(id, action, note) {
+    return this.request(`/leaves/overtime/${id}/review`, {
+      method: 'PUT', body: JSON.stringify({ action, note })
+    });
+  }
+
+  // Export
+  async exportPayroll(month, year) {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE_URL}/salaries/export?month=${month}&year=${year}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error('Export failed');
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `payroll_${year}_${month}.xlsx`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
+
   // Auth
   async login(email, password) {
     const data = await this.request('/auth/login', {

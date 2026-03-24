@@ -1,0 +1,22 @@
+{
+  "name": "Smart Attendance System",
+  "short_name": "Attendance",
+  "description": "AI-powered CCTV attendance management system",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B0F1A",
+  "theme_color": "#6C63FF",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%236C63FF' rx='40' width='192' height='192'/><text x='96' y='120' text-anchor='middle' fill='white' font-size='80' font-family='Inter,sans-serif' font-weight='700'>SA</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect fill='%236C63FF' rx='100' width='512' height='512'/><text x='256' y='320' text-anchor='middle' fill='white' font-size='220' font-family='Inter,sans-serif' font-weight='700'>SA</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -1,16 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import {
   Typography, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Paper, Button, Dialog, DialogTitle,
+  TableHead, TableRow, Paper, Button, DialogTitle,
   DialogContent, DialogActions, TextField, Select, MenuItem,
-  FormControl, InputLabel, IconButton, Chip, Box, Grid,
-  Card, CardContent, CircularProgress, Alert, Snackbar
+  FormControl, InputLabel, Chip, Box, Grid,
+  CardContent, CircularProgress, Alert, Avatar, useMediaQuery, useTheme
 } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import SearchIcon from '@mui/icons-material/Search';
 import { api } from '../services/api';
+import { monoFont } from '../theme';
+import AnimatedPage from '../components/AnimatedPage';
+import GlassCard from '../components/GlassCard';
+import AnimatedDialog from '../components/AnimatedDialog';
+import AnimatedTableRow from '../components/AnimatedTableRow';
+import ToastNotification from '../components/ToastNotification';
+import MobileDataList from '../components/MobileDataList';
+import { TableSkeleton } from '../components/SkeletonLoader';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const EmployeeManagement = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [employees, setEmployees] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -23,52 +35,28 @@ const EmployeeManagement = () => {
   const [faceRegistering, setFaceRegistering] = useState(false);
   const [error, setError] = useState(null);
   const [formErrors, setFormErrors] = useState({});
-  const [departments, setDepartments] = useState([
-    'Engineering', 'HR', 'Finance', 'Operations', 'Marketing', 'Sales'
+  const [departments] = useState([
+    'Engineering', 'HR', 'Finance', 'Operations', 'Marketing', 'Sales', 'IT'
   ]);
-
-  // Toast state
   const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
 
   const [formData, setFormData] = useState({
-    employeeId: '',
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    department: '',
-    designation: '',
-    baseSalary: 0,
-    role: 'employee'
+    employeeId: '', firstName: '', lastName: '', email: '',
+    phone: '', department: '', designation: '', baseSalary: 0, role: 'employee'
   });
 
-  useEffect(() => {
-    loadEmployees();
-    loadDepartments();
-  }, [searchQuery, departmentFilter]);
-
-  const loadDepartments = async () => {
-    try {
-      const data = await api.getDepartments?.();
-      if (data && Array.isArray(data.departments || data)) {
-        setDepartments(data.departments || data);
-      }
-    } catch {
-      // Fall back to default departments list
-    }
-  };
+  useEffect(() => { loadEmployees(); }, [searchQuery, departmentFilter]);
 
   const loadEmployees = async () => {
     try {
-      setError(null);
-      setLoading(true);
+      setError(null); setLoading(true);
       const params = {};
       if (searchQuery) params.search = searchQuery;
       if (departmentFilter) params.department = departmentFilter;
       const data = await api.getEmployees(params);
-      setEmployees(data.employees || data);
-    } catch (err) {
-      setError('Failed to load employees. Please try again later.');
+      setEmployees(data.employees || data || []);
+    } catch {
+      setError('Failed to load employees.');
     } finally {
       setLoading(false);
     }
@@ -76,426 +64,302 @@ const EmployeeManagement = () => {
 
   const validateForm = () => {
     const errors = {};
-
-    if (!formData.employeeId.trim()) {
-      errors.employeeId = 'Employee ID is required';
-    }
-    if (!formData.firstName.trim()) {
-      errors.firstName = 'First name is required';
-    }
-    if (!formData.lastName.trim()) {
-      errors.lastName = 'Last name is required';
-    }
-    if (!formData.email.trim()) {
-      errors.email = 'Email is required';
-    } else if (!EMAIL_REGEX.test(formData.email)) {
-      errors.email = 'Invalid email format';
-    }
-    if (!formData.department) {
-      errors.department = 'Department is required';
-    }
-    if (formData.baseSalary < 0) {
-      errors.baseSalary = 'Salary must be 0 or greater';
-    }
-
+    if (!formData.employeeId.trim()) errors.employeeId = 'Required';
+    if (!formData.firstName.trim()) errors.firstName = 'Required';
+    if (!formData.lastName.trim()) errors.lastName = 'Required';
+    if (!formData.email.trim()) errors.email = 'Required';
+    else if (!EMAIL_REGEX.test(formData.email)) errors.email = 'Invalid email';
+    if (!formData.department) errors.department = 'Required';
+    if (formData.baseSalary < 0) errors.baseSalary = 'Must be positive';
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
-
     setSaving(true);
     try {
       if (selectedEmployee) {
         await api.updateEmployee(selectedEmployee._id, formData);
-        showToast('Employee updated successfully', 'success');
+        showToast('Employee updated', 'success');
       } else {
         await api.createEmployee(formData);
-        showToast('Employee created successfully', 'success');
+        showToast('Employee created', 'success');
       }
-      setDialogOpen(false);
-      resetForm();
-      loadEmployees();
-    } catch (err) {
-      showToast('Failed to save employee. Please try again.', 'error');
-    } finally {
-      setSaving(false);
-    }
+      setDialogOpen(false); resetForm(); loadEmployees();
+    } catch {
+      showToast('Failed to save employee.', 'error');
+    } finally { setSaving(false); }
   };
 
-  const handleEdit = (employee) => {
-    setSelectedEmployee(employee);
+  const handleEdit = (emp) => {
+    setSelectedEmployee(emp);
     setFormErrors({});
     setFormData({
-      employeeId: employee.employeeId,
-      firstName: employee.firstName,
-      lastName: employee.lastName,
-      email: employee.email,
-      phone: employee.phone || '',
-      department: employee.department,
-      designation: employee.designation || '',
-      baseSalary: employee.baseSalary || 0,
-      role: employee.role
+      employeeId: emp.employeeId, firstName: emp.firstName, lastName: emp.lastName,
+      email: emp.email, phone: emp.phone || '', department: emp.department,
+      designation: emp.designation || '', baseSalary: emp.baseSalary || 0, role: emp.role,
     });
     setDialogOpen(true);
   };
 
-  const handleDelete = async (employeeId) => {
-    if (window.confirm('Are you sure you want to deactivate this employee?')) {
-      setDeleting(true);
-      try {
-        await api.deleteEmployee(employeeId);
-        showToast('Employee deactivated successfully', 'success');
-        loadEmployees();
-      } catch (err) {
-        showToast('Failed to deactivate employee. Please try again.', 'error');
-      } finally {
-        setDeleting(false);
-      }
-    }
+  const handleDelete = async (id) => {
+    if (!window.confirm('Deactivate this employee?')) return;
+    setDeleting(true);
+    try {
+      await api.deleteEmployee(id);
+      showToast('Employee deactivated', 'success');
+      loadEmployees();
+    } catch {
+      showToast('Failed to deactivate.', 'error');
+    } finally { setDeleting(false); }
   };
 
   const handleFaceRegister = async (event) => {
     const file = event.target.files[0];
     if (!file || !selectedEmployee) return;
-
     setFaceRegistering(true);
-    const formDataObj = new FormData();
-    formDataObj.append('face', file);
-
+    const fd = new FormData();
+    fd.append('face', file);
     try {
-      await api.registerFace(selectedEmployee._id, formDataObj);
-      showToast('Face registered successfully', 'success');
-      setFaceDialogOpen(false);
-      loadEmployees();
-    } catch (err) {
-      showToast('Failed to register face. Please try again.', 'error');
-    } finally {
-      setFaceRegistering(false);
-    }
+      await api.registerFace(selectedEmployee._id, fd);
+      showToast('Face registered', 'success');
+      setFaceDialogOpen(false); loadEmployees();
+    } catch {
+      showToast('Failed to register face.', 'error');
+    } finally { setFaceRegistering(false); }
   };
 
   const resetForm = () => {
-    setSelectedEmployee(null);
-    setFormErrors({});
-    setFormData({
-      employeeId: '',
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      department: '',
-      designation: '',
-      baseSalary: 0,
-      role: 'employee'
-    });
+    setSelectedEmployee(null); setFormErrors({});
+    setFormData({ employeeId: '', firstName: '', lastName: '', email: '',
+      phone: '', department: '', designation: '', baseSalary: 0, role: 'employee' });
   };
 
-  const showToast = (message, severity) => {
-    setToast({ open: true, message, severity });
-  };
-
-  const handleCloseToast = () => {
-    setToast({ ...toast, open: false });
-  };
+  const showToast = (message, severity) => setToast({ open: true, message, severity });
 
   if (loading && employees.length === 0) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }} aria-label="Loading employees">
-        <CircularProgress aria-label="Loading spinner" />
-      </Box>
-    );
+    return <AnimatedPage><TableSkeleton rows={8} cols={7} /></AnimatedPage>;
   }
 
   return (
-    <div aria-label="Employee management page">
-      {/* Toast notifications */}
-      <Snackbar
-        open={toast.open}
-        autoHideDuration={4000}
-        onClose={handleCloseToast}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-      >
-        <Alert onClose={handleCloseToast} severity={toast.severity} sx={{ width: '100%' }}>
-          {toast.message}
-        </Alert>
-      </Snackbar>
+    <AnimatedPage>
+      <Box>
+        <ToastNotification open={toast.open} message={toast.message} severity={toast.severity}
+          onClose={() => setToast({ ...toast, open: false })} />
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Employee Management</Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => { resetForm(); setDialogOpen(true); }}
-          aria-label="Add new employee"
-        >
-          Add Employee
-        </Button>
-      </Box>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} aria-label="Employee list error">{error}</Alert>
-      )}
-
-      {/* Filters */}
-      <Grid container spacing={2} sx={{ mb: 3 }} aria-label="Employee filters">
-        <Grid item xs={12} sm={6} md={4}>
-          <TextField
-            fullWidth
-            label="Search employees..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            aria-label="Search employees by name or ID"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={4}>
-          <FormControl fullWidth>
-            <InputLabel>Department</InputLabel>
-            <Select
-              value={departmentFilter}
-              label="Department"
-              onChange={(e) => setDepartmentFilter(e.target.value)}
-              aria-label="Filter by department"
-            >
-              <MenuItem value="">All Departments</MenuItem>
-              {departments.map(dept => (
-                <MenuItem key={dept} value={dept}>{dept}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
-      </Grid>
-
-      {/* Employee Table */}
-      <TableContainer component={Paper} aria-label="Employee list table">
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Employee ID</TableCell>
-              <TableCell>Name</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Department</TableCell>
-              <TableCell>Designation</TableCell>
-              <TableCell>Face Registered</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {employees.map((employee) => (
-              <TableRow key={employee._id}>
-                <TableCell>{employee.employeeId}</TableCell>
-                <TableCell>{employee.firstName} {employee.lastName}</TableCell>
-                <TableCell>{employee.email}</TableCell>
-                <TableCell>{employee.department}</TableCell>
-                <TableCell>{employee.designation}</TableCell>
-                <TableCell>
-                  <Chip
-                    label={employee.faceEmbeddings?.length > 0 ? 'Yes' : 'No'}
-                    color={employee.faceEmbeddings?.length > 0 ? 'success' : 'default'}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    label={employee.isActive ? 'Active' : 'Inactive'}
-                    color={employee.isActive ? 'success' : 'error'}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell>
-                  <Button size="small" onClick={() => handleEdit(employee)} aria-label={`Edit ${employee.firstName} ${employee.lastName}`}>Edit</Button>
-                  <Button
-                    size="small"
-                    color="secondary"
-                    onClick={() => { setSelectedEmployee(employee); setFaceDialogOpen(true); }}
-                    aria-label={`Register face for ${employee.firstName} ${employee.lastName}`}
-                  >
-                    Register Face
-                  </Button>
-                  <Button
-                    size="small"
-                    color="error"
-                    onClick={() => handleDelete(employee._id)}
-                    disabled={deleting}
-                    aria-label={`Deactivate ${employee.firstName} ${employee.lastName}`}
-                  >
-                    Deactivate
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      {/* Add/Edit Employee Dialog */}
-      <Dialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-        aria-label={selectedEmployee ? 'Edit employee dialog' : 'Add employee dialog'}
-      >
-        <DialogTitle>{selectedEmployee ? 'Edit Employee' : 'Add Employee'}</DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Employee ID"
-                value={formData.employeeId}
-                onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
-                disabled={!!selectedEmployee}
-                required
-                error={!!formErrors.employeeId}
-                helperText={formErrors.employeeId}
-                aria-label="Employee ID"
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                required
-                error={!!formErrors.email}
-                helperText={formErrors.email}
-                aria-label="Employee email"
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="First Name"
-                value={formData.firstName}
-                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                required
-                error={!!formErrors.firstName}
-                helperText={formErrors.firstName}
-                aria-label="First name"
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Last Name"
-                value={formData.lastName}
-                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                required
-                error={!!formErrors.lastName}
-                helperText={formErrors.lastName}
-                aria-label="Last name"
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Phone"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                aria-label="Phone number"
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <FormControl fullWidth required error={!!formErrors.department}>
-                <InputLabel>Department</InputLabel>
-                <Select
-                  value={formData.department}
-                  label="Department"
-                  onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                  aria-label="Department"
-                >
-                  {departments.map(dept => (
-                    <MenuItem key={dept} value={dept}>{dept}</MenuItem>
-                  ))}
-                </Select>
-                {formErrors.department && (
-                  <Typography variant="caption" color="error" sx={{ ml: 2, mt: 0.5 }}>
-                    {formErrors.department}
-                  </Typography>
-                )}
-              </FormControl>
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Designation"
-                value={formData.designation}
-                onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
-                aria-label="Designation"
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Base Salary"
-                type="number"
-                value={formData.baseSalary}
-                onChange={(e) => setFormData({ ...formData, baseSalary: Number(e.target.value) })}
-                error={!!formErrors.baseSalary}
-                helperText={formErrors.baseSalary}
-                inputProps={{ min: 0 }}
-                aria-label="Base salary"
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <FormControl fullWidth>
-                <InputLabel>Role</InputLabel>
-                <Select
-                  value={formData.role}
-                  label="Role"
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                  aria-label="Employee role"
-                >
-                  <MenuItem value="employee">Employee</MenuItem>
-                  <MenuItem value="admin">Admin</MenuItem>
-                  <MenuItem value="super-admin">Super Admin</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogOpen(false)} aria-label="Cancel">Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained" color="primary" disabled={saving} aria-label={selectedEmployee ? 'Update employee' : 'Create employee'}>
-            {saving ? <CircularProgress size={20} /> : (selectedEmployee ? 'Update' : 'Create')}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: { xs: 2, sm: 4 } }}>
+          <Box>
+            <Typography variant="h4">Employees</Typography>
+            <Typography variant="subtitle1">{employees.length} total employees</Typography>
+          </Box>
+          <Button variant="contained" startIcon={<AddIcon />}
+            onClick={() => { resetForm(); setDialogOpen(true); }}
+            sx={{ background: 'linear-gradient(135deg, #6C63FF, #4A42CC)',
+              '&:hover': { background: 'linear-gradient(135deg, #8B83FF, #6C63FF)' } }}>
+            Add Employee
           </Button>
-        </DialogActions>
-      </Dialog>
+        </Box>
 
-      {/* Face Registration Dialog */}
-      <Dialog
-        open={faceDialogOpen}
-        onClose={() => setFaceDialogOpen(false)}
-        aria-label="Face registration dialog"
-      >
-        <DialogTitle>Register Face - {selectedEmployee?.firstName} {selectedEmployee?.lastName}</DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" sx={{ mb: 2 }}>
-            Upload a clear photo of the employee's face for recognition.
-          </Typography>
-          {faceRegistering ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
-              <CircularProgress aria-label="Uploading face image" />
-            </Box>
-          ) : (
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFaceRegister}
-              aria-label="Upload employee face photo"
-            />
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setFaceDialogOpen(false)} disabled={faceRegistering} aria-label="Cancel face registration">Cancel</Button>
-        </DialogActions>
-      </Dialog>
-    </div>
+        {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+
+        {/* Filters */}
+        <Grid container spacing={{ xs: 1, sm: 2 }} sx={{ mb: 3 }}>
+          <Grid item xs={12} sm={6} md={4}>
+            <TextField fullWidth placeholder="Search by name or ID..." value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)} size="small"
+              InputProps={{ startAdornment: <SearchIcon sx={{ mr: 1, color: '#8892A8' }} /> }} />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Department</InputLabel>
+              <Select value={departmentFilter} label="Department" onChange={(e) => setDepartmentFilter(e.target.value)}>
+                <MenuItem value="">All</MenuItem>
+                {departments.map(d => <MenuItem key={d} value={d}>{d}</MenuItem>)}
+              </Select>
+            </FormControl>
+          </Grid>
+        </Grid>
+
+        {/* Data View */}
+        {isMobile ? (
+          <MobileDataList
+            items={employees}
+            accentColor={(emp) => emp.role === 'admin' ? '#6C63FF' : '#00D9A6'}
+            primaryKey={(emp) => `${emp.firstName} ${emp.lastName}`}
+            secondaryKey={(emp) => (
+              <Chip label={emp.isActive ? 'Active' : 'Inactive'} size="small"
+                sx={{ bgcolor: emp.isActive ? 'rgba(0,217,166,0.12)' : 'rgba(255,92,108,0.12)',
+                  color: emp.isActive ? '#00D9A6' : '#FF5C6C', height: 20, fontSize: '0.7rem' }} />
+            )}
+            fields={[
+              { label: 'ID', key: 'employeeId' },
+              { label: 'Email', key: 'email' },
+              { label: 'Dept', key: 'department' },
+              { label: 'Role', key: 'role', chip: true },
+            ]}
+            onItemClick={(emp) => handleEdit(emp)}
+            emptyText="No employees found"
+          />
+        ) : (
+          <GlassCard>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Employee</TableCell>
+                    <TableCell>ID</TableCell>
+                    <TableCell>Department</TableCell>
+                    <TableCell>Designation</TableCell>
+                    <TableCell>Face</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell align="right">Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {employees.map((emp, i) => {
+                    const initials = `${emp.firstName?.[0] || ''}${emp.lastName?.[0] || ''}`.toUpperCase();
+                    return (
+                      <AnimatedTableRow key={emp._id} index={i}>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            <Avatar sx={{ width: 34, height: 34, fontSize: '0.75rem', fontWeight: 700,
+                              bgcolor: emp.role === 'admin' ? '#6C63FF' : '#00D9A6' }}>
+                              {initials}
+                            </Avatar>
+                            <Box>
+                              <Typography variant="body2" sx={{ fontWeight: 600 }}>{emp.firstName} {emp.lastName}</Typography>
+                              <Typography variant="caption" sx={{ color: '#8892A8' }}>{emp.email}</Typography>
+                            </Box>
+                          </Box>
+                        </TableCell>
+                        <TableCell><Typography variant="body2" sx={{ fontFamily: monoFont, color: '#8892A8', fontSize: '0.8rem' }}>{emp.employeeId}</Typography></TableCell>
+                        <TableCell>{emp.department}</TableCell>
+                        <TableCell>{emp.designation || '-'}</TableCell>
+                        <TableCell>
+                          <Chip label={emp.faceEmbeddings?.length > 0 ? 'Registered' : 'None'} size="small"
+                            sx={{
+                              bgcolor: emp.faceEmbeddings?.length > 0 ? 'rgba(0,217,166,0.12)' : 'rgba(136,146,168,0.1)',
+                              color: emp.faceEmbeddings?.length > 0 ? '#00D9A6' : '#8892A8',
+                            }} />
+                        </TableCell>
+                        <TableCell>
+                          <Chip label={emp.isActive ? 'Active' : 'Inactive'} size="small"
+                            sx={{
+                              bgcolor: emp.isActive ? 'rgba(0,217,166,0.12)' : 'rgba(255,92,108,0.12)',
+                              color: emp.isActive ? '#00D9A6' : '#FF5C6C',
+                            }} />
+                        </TableCell>
+                        <TableCell align="right">
+                          <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
+                            <Button size="small" onClick={() => handleEdit(emp)}>Edit</Button>
+                            <Button size="small" sx={{ color: '#6C63FF' }}
+                              onClick={() => { setSelectedEmployee(emp); setFaceDialogOpen(true); }}>
+                              Face
+                            </Button>
+                            <Button size="small" sx={{ color: '#FF5C6C' }} disabled={deleting}
+                              onClick={() => handleDelete(emp._id)}>
+                              Deactivate
+                            </Button>
+                          </Box>
+                        </TableCell>
+                      </AnimatedTableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </GlassCard>
+        )}
+
+        {/* Add/Edit Dialog */}
+        <AnimatedDialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>{selectedEmployee ? 'Edit Employee' : 'Add Employee'}</DialogTitle>
+          <DialogContent>
+            <Grid container spacing={2} sx={{ mt: 0.5 }}>
+              <Grid item xs={12} sm={6}>
+                <TextField fullWidth label="Employee ID" value={formData.employeeId}
+                  onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
+                  disabled={!!selectedEmployee} required error={!!formErrors.employeeId} helperText={formErrors.employeeId} />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField fullWidth label="Email" type="email" value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  required error={!!formErrors.email} helperText={formErrors.email} />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField fullWidth label="First Name" value={formData.firstName}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  required error={!!formErrors.firstName} helperText={formErrors.firstName} />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField fullWidth label="Last Name" value={formData.lastName}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  required error={!!formErrors.lastName} helperText={formErrors.lastName} />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField fullWidth label="Phone" value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth required error={!!formErrors.department}>
+                  <InputLabel>Department</InputLabel>
+                  <Select value={formData.department} label="Department"
+                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}>
+                    {departments.map(d => <MenuItem key={d} value={d}>{d}</MenuItem>)}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField fullWidth label="Designation" value={formData.designation}
+                  onChange={(e) => setFormData({ ...formData, designation: e.target.value })} />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField fullWidth label="Base Salary" type="number" value={formData.baseSalary}
+                  onChange={(e) => setFormData({ ...formData, baseSalary: Number(e.target.value) })}
+                  error={!!formErrors.baseSalary} helperText={formErrors.baseSalary} inputProps={{ min: 0 }} />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Role</InputLabel>
+                  <Select value={formData.role} label="Role"
+                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}>
+                    <MenuItem value="employee">Employee</MenuItem>
+                    <MenuItem value="admin">Admin</MenuItem>
+                    <MenuItem value="super-admin">Super Admin</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 3 }}>
+            <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button variant="contained" onClick={handleSubmit} disabled={saving}
+              sx={{ background: 'linear-gradient(135deg, #6C63FF, #4A42CC)' }}>
+              {saving ? <CircularProgress size={20} color="inherit" /> : (selectedEmployee ? 'Update' : 'Create')}
+            </Button>
+          </DialogActions>
+        </AnimatedDialog>
+
+        {/* Face Registration Dialog */}
+        <AnimatedDialog open={faceDialogOpen} onClose={() => setFaceDialogOpen(false)}>
+          <DialogTitle>Register Face - {selectedEmployee?.firstName} {selectedEmployee?.lastName}</DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" sx={{ mb: 2, color: '#8892A8' }}>
+              Upload a clear photo of the employee's face for recognition.
+            </Typography>
+            {faceRegistering ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}><CircularProgress /></Box>
+            ) : (
+              <input type="file" accept="image/*" onChange={handleFaceRegister} />
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setFaceDialogOpen(false)} disabled={faceRegistering}>Cancel</Button>
+          </DialogActions>
+        </AnimatedDialog>
+      </Box>
+    </AnimatedPage>
   );
 };
 
