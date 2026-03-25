@@ -60,6 +60,7 @@ app.use('/api/notifications', authMiddleware, require('./api/routes/notification
 app.use('/api/insights', authMiddleware, require('./api/routes/insights'));
 app.use('/api/geofence', authMiddleware, require('./api/routes/geofence'));
 app.use('/api/leaves', authMiddleware, require('./api/routes/leaves'));
+app.use('/api/settings', authMiddleware, require('./api/routes/settings'));
 
 // ─── Error Handling ───────────────────────────────────────────────
 app.use(notFoundHandler);

@@ -21,6 +21,7 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import EventNoteIcon from '@mui/icons-material/EventNote';
+import SettingsIcon from '@mui/icons-material/Settings';
 import MenuIcon from '@mui/icons-material/Menu';
 import WifiOffIcon from '@mui/icons-material/WifiOff';
 
@@ -34,6 +35,7 @@ import CameraManagement from './pages/CameraManagement';
 import InsightsPage from './pages/InsightsPage';
 import NotificationManager from './pages/NotificationManager';
 import LeaveManagement from './pages/LeaveManagement';
+import SettingsPage from './pages/SettingsPage';
 import InstallPrompt from './components/InstallPrompt';
 import { api } from './services/api';
 
@@ -48,6 +50,7 @@ const adminNav = [
   { label: 'Leave & HR', icon: <EventNoteIcon />, key: 'leaves' },
   { label: 'AI Insights', icon: <AutoAwesomeIcon />, key: 'insights' },
   { label: 'Notifications', icon: <NotificationsActiveIcon />, key: 'notifications' },
+  { label: 'Settings', icon: <SettingsIcon />, key: 'settings' },
 ];
 
 const employeeNav = [
@@ -237,6 +240,7 @@ function App() {
       case 'my-salary': return <SalaryManagement isAdmin={false} user={user} />;
       case 'leaves': return isAdmin ? <LeaveManagement isAdmin={true} /> : null;
       case 'my-leaves': return <LeaveManagement isAdmin={false} />;
+      case 'settings': return isAdmin ? <SettingsPage /> : null;
       case 'insights': return isAdmin ? <InsightsPage /> : null;
       case 'notifications': return isAdmin ? <NotificationManager isAdmin={true} /> : null;
       case 'my-notifications': return <NotificationManager isAdmin={false} />;

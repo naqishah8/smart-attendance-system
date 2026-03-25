@@ -488,6 +488,15 @@ class ApiService {
     });
   }
 
+  // Settings
+  async getSettings() {
+    return this.request('/settings');
+  }
+
+  async updateSettings(data) {
+    return this.request('/settings', { method: 'PUT', body: JSON.stringify(data) });
+  }
+
   // Export
   async exportPayroll(month, year) {
     const token = localStorage.getItem('token');
